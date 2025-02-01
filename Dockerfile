@@ -1,6 +1,6 @@
-LABEL org.opencontainers.image.source=https://github.com/kougen/printable-flashcard-generator
-
 FROM python:3.12
+
+LABEL org.opencontainers.image.source=https://github.com/kougen/printable-flashcard-generator
 
 WORKDIR /app
 
