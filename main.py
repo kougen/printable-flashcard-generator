@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, Request, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
@@ -6,14 +8,16 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 import io
 import uvicorn
+from dotenv import load_dotenv
+
+load_dotenv()
 
 templates = Jinja2Templates(directory="templates")
 app = FastAPI()
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-SERVER_URL = "http://127.0.0.1:8000"
-
+SERVER_URL = os.getenv("SERVER_URL", "http://localhost:8000")
 
 @app.get("/", response_class=HTMLResponse)
 async def homepage(request: Request):
@@ -60,7 +64,6 @@ async def generate_pdf(
 
     pdf.save(pdf_path, "PDF")
 
-    # Create second page for words
     pdf_words_path = UPLOAD_DIR / "flashcards_words.pdf"
     word_pdf = Image.new("RGB", pdf_size, "white")
     draw = ImageDraw.Draw(word_pdf)
