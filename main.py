@@ -16,8 +16,11 @@ templates = Jinja2Templates(directory="templates")
 app = FastAPI()
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
+STATIC_DIR = Path("static/js")
+STATIC_DIR.mkdir(exist_ok=True, parents=True)
 
 SERVER_URL = os.getenv("SERVER_URL", "http://localhost:8000")
+
 
 @app.get("/", response_class=HTMLResponse)
 async def homepage(request: Request):
@@ -86,6 +89,8 @@ async def generate_pdf(
         "pdf_url": f"/uploads/flashcards.pdf",
         "pdf_words_url": f"/uploads/flashcards_words.pdf"
     })
+
+
 @app.get("/uploads/{file_name}")
 async def get_upload(file_name: str):
     return FileResponse(UPLOAD_DIR / file_name)
