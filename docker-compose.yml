@@ -1,0 +1,16 @@
+services:
+  generator:
+    image: kougen/flashcard-generator:latest
+    volumes:
+      - ./uploads:/app/uploads
+    ports:
+      - "5501:5501"
+    env_file:
+      - .env
+    labels:
+    # For traefik for example
+      - "traefik.enable=true"
+      - "traefik.http.routers.flashcard-generator.rule=Host(`generator.example.com`)"
+      - "traefik.http.services.flashcard-generator.loadbalancer.server.port=5501"
+      - "traefik.http.routers.flashcard-generator.entrypoints=websecure"
+      - "traefik.http.routers.flashcard-generator.tls=true"
