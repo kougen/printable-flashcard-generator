@@ -12,4 +12,6 @@ COPY static static
 
 RUN pip install -r requirements.txt
 
+EXPOSE 5501
+
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5501"]
