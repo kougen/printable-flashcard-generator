@@ -1,8 +1,20 @@
 let activeRow = null;
 
-document.getElementById('excludeImages').addEventListener('change', function() {
-    document.getElementById('image-column').style.display = this.checked ? 'none' : '';
-});
+window.onload = function () {
+    document.getElementById('exclude-images').addEventListener('change', function () {
+        document.getElementById('image-header').style.display = this.checked ? 'none' : '';
+
+        const imageInputs = document.querySelectorAll('.image-input');
+        const imageCells = document.querySelectorAll('.image-cell');
+        imageInputs.forEach((input) => {
+            input.required = !this.checked;
+        });
+        imageCells.forEach((cell) => {
+            cell.style.display = this.checked ? 'none' : '';
+        });
+    });
+
+}
 
 document.addEventListener("click", (event) => {
     const row = event.target.closest("tr");
