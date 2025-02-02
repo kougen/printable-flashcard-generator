@@ -9,6 +9,7 @@ COPY main.py main.py
 
 COPY templates templates
 COPY static static
+COPY assets assets
 
 RUN pip install -r requirements.txt
 
