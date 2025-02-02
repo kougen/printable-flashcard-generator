@@ -3,12 +3,13 @@ import os
 from fastapi import FastAPI, Request, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
-from typing import List
+from typing import List, Optional
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 import io
 import uvicorn
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
 
@@ -19,7 +20,17 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 STATIC_DIR = Path("static/js")
 STATIC_DIR.mkdir(exist_ok=True, parents=True)
 
+WORD_FILE_NAME = os.getenv("WORD_FILE_NAME", "flashcards_words.pdf")
+IMAGE_FILE_NAME = os.getenv("IMAGE_FILE_NAME", "flashcards.pdf")
+
 SERVER_URL = os.getenv("SERVER_URL", "http://localhost:8000")
+
+def get_timestamp():
+    return datetime.now().strftime("%Y%m%d%H%M%S")
+
+
+def get_timestamped_filename(file_name: str):
+    return f"{get_timestamp()}_{file_name}"
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -46,8 +57,9 @@ async def error(request: Request, error_type: int | None = None):
 @app.post("/generate-pdf", response_class=HTMLResponse)
 async def generate_pdf(
         request: Request,
-        images: List[UploadFile] = File(...),
-        words: List[str] = Form(...)
+        words: List[str] = Form(...),
+        images: Optional[List[UploadFile]] = Form(None),
+        exclude_images: Optional[bool] = Form(False)
 ):
     num_cards = len(words)
     grid_size = (3, 5)
@@ -57,28 +69,35 @@ async def generate_pdf(
     pdf_images = []
     pdf_words = []
 
+    page_count = num_cards // (grid_size[0] * grid_size[1]) + 1
+
     for i in range(num_cards):
-        img = Image.open(io.BytesIO(await images[i].read()))
-        img.thumbnail(card_size)  # Keep aspect ratio
-        pdf_images.append(img)
+        if not exclude_images:
+            img = Image.open(io.BytesIO(await images[i].read()))
+            img.thumbnail(card_size)  # Keep aspect ratio
+            pdf_images.append(img)
         pdf_words.append(words[i])
 
-    pdf_path = UPLOAD_DIR / "flashcards.pdf"
-    pdf = Image.new("RGB", pdf_size, "white")
-    draw = ImageDraw.Draw(pdf)
-    font = ImageFont.load_default()
+    font = ImageFont.truetype('./assets/Roboto-Medium.ttf', 30)
 
-    for i, img in enumerate(pdf_images):
-        x = (i % grid_size[0]) * card_size[0]
-        y = (i // grid_size[0]) * card_size[1]
-        img_x = x + (card_size[0] - img.width) // 2
-        img_y = y + (card_size[1] - img.height) // 2
-        pdf.paste(img, (img_x, img_y))
-        draw.rectangle([x, y, x + card_size[0], y + card_size[1]], outline="black", width=2)  # Draw border
+    pdf_path = None
 
-    pdf.save(pdf_path, "PDF")
+    if not exclude_images:
+        pdf_path = UPLOAD_DIR / get_timestamped_filename(IMAGE_FILE_NAME)
+        pdf = Image.new("RGB", pdf_size, "white")
+        draw = ImageDraw.Draw(pdf)
 
-    pdf_words_path = UPLOAD_DIR / "flashcards_words.pdf"
+        for i, img in enumerate(pdf_images):
+            x = (i % grid_size[0]) * card_size[0]
+            y = (i // grid_size[0]) * card_size[1]
+            img_x = x + (card_size[0] - img.width) // 2
+            img_y = y + (card_size[1] - img.height) // 2
+            pdf.paste(img, (img_x, img_y))
+            draw.rectangle([x, y, x + card_size[0], y + card_size[1]], outline="black", width=2)  # Draw border
+
+        pdf.save(pdf_path, "PDF")
+
+    pdf_words_path = UPLOAD_DIR / get_timestamped_filename(WORD_FILE_NAME)
     word_pdf = Image.new("RGB", pdf_size, "white")
     draw = ImageDraw.Draw(word_pdf)
 
@@ -97,8 +116,8 @@ async def generate_pdf(
 
     return templates.TemplateResponse("pdf_link.html", {
         "request": request,
-        "pdf_url": f"/uploads/flashcards.pdf",
-        "pdf_words_url": f"/uploads/flashcards_words.pdf"
+        "pdf_url": f"/uploads/{pdf_path.name}" if not pdf_path else None,
+        "pdf_words_url": f"/uploads/{pdf_words_path.name}",
     })
 
 
