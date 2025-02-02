@@ -92,12 +92,22 @@ async def generate_pdf(
 
 
 @app.get("/uploads/{file_name}")
-async def get_upload(file_name: str):
+async def get_upload(request: Request, file_name: str):
+    # Check if the file exists or not
+
+    if not (UPLOAD_DIR / file_name).exists():
+        return templates.TemplateResponse("error.html", {
+            "request": request,
+            "error": f"File {file_name} not found!"
+        })
     return FileResponse(UPLOAD_DIR / file_name)
 
 
 @app.get("/static/js/{file_name}")
 async def get_static(file_name: str):
+    if not (STATIC_DIR / file_name).exists():
+        return None
+
     return FileResponse(STATIC_DIR / file_name)
 
 
