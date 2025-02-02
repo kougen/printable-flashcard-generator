@@ -32,6 +32,11 @@ async def add_row(request: Request):
     return templates.TemplateResponse("row.html", {"request": request})
 
 
+@app.post("/flashcard-form", response_class=HTMLResponse)
+async def flashcard_form(request: Request):
+    return templates.TemplateResponse("form.html", {"request": request})
+
+
 @app.post("/generate-pdf", response_class=HTMLResponse)
 async def generate_pdf(
         request: Request,
