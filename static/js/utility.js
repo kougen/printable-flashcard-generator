@@ -1,5 +1,9 @@
 let activeRow = null;
 
+document.getElementById('excludeImages').addEventListener('change', function() {
+    document.getElementById('image-column').style.display = this.checked ? 'none' : '';
+});
+
 document.addEventListener("click", (event) => {
     const row = event.target.closest("tr");
     if (row && row.classList.contains("editable")) {

@@ -11,11 +11,24 @@
 <body class="p-10 bg-gray-100">
 <div class="max-w-4xl mx-auto bg-white p-6 shadow-md rounded-lg">
     <h1 class="text-2xl font-bold mb-4">Flashcard Generator</h1>
+
+    {% if error_type == 404 %}
+    <div hx-get="/error" hx-swap="outerHTML" hx-trigger="load"
+         hx-vals='{"error_type": "404", "file_name": "{{ file_name }}"}'></div>
+    {% elif error_message %}
+    <div hx-get="/error" hx-swap="outerHTML" hx-trigger="load"
+         hx-vals='{"error_message": "{{ error_message }}"}'></div>
+    {% else %}
     <form id="flashcard-form" hx-post="/generate-pdf" hx-target="#pdf-link" enctype="multipart/form-data">
+        <label>
+            <input type="checkbox" id="excludeImages" name="exclude_images">
+            Exclude Images
+        </label>
+
         <table class="w-full border-collapse border border-gray-300" id="flashcard-table">
             <thead>
             <tr>
-                <th class="border p-2">Image</th>
+                <th class="border p-2" id="image-column">Image</th>
                 <th class="border p-2">Word</th>
                 <th class="border p-2">Actions</th>
             </tr>
@@ -24,6 +37,7 @@
             <tr hx-get="/add-row" hx-trigger="load"></tr>
             </tbody>
         </table>
+
         <button type="button" class="mt-4 bg-blue-500 text-white px-4 py-2"
                 hx-post="/add-row" hx-target="#flashcard-table tbody" hx-swap="beforeend">
             Add Row
@@ -32,5 +46,7 @@
     </form>
     <div id="pdf-link" class="mt-4"></div>
 </div>
+{% endif %}
+
 </body>
 </html>
