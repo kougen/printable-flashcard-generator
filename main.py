@@ -96,6 +96,11 @@ async def get_upload(file_name: str):
     return FileResponse(UPLOAD_DIR / file_name)
 
 
+@app.get("/static/js/{file_name}")
+async def get_static(file_name: str):
+    return FileResponse(STATIC_DIR / file_name)
+
+
 def main():
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
 
