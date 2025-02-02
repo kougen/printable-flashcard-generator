@@ -32,9 +32,15 @@ async def add_row(request: Request):
     return templates.TemplateResponse("row.html", {"request": request})
 
 
-@app.post("/flashcard-form", response_class=HTMLResponse)
-async def flashcard_form(request: Request):
-    return templates.TemplateResponse("form.html", {"request": request})
+@app.get("/error", response_class=HTMLResponse)
+async def error(request: Request, error_type: int | None = None):
+    if error_type == 404:
+        file_name = request.query_params.get("file_name")
+        return templates.TemplateResponse("error/file_404.html",
+                                          {"request": request, "file_name": file_name})
+
+    error_message = request.query_params.get("error_message") or "An error occurred"
+    return templates.TemplateResponse("error.html", {"request": request, "error_message": error_message})
 
 
 @app.post("/generate-pdf", response_class=HTMLResponse)
@@ -98,12 +104,11 @@ async def generate_pdf(
 
 @app.get("/uploads/{file_name}")
 async def get_upload(request: Request, file_name: str):
-    # Check if the file exists or not
-
     if not (UPLOAD_DIR / file_name).exists():
-        return templates.TemplateResponse("error.html", {
+        return templates.TemplateResponse("index.html", {
             "request": request,
-            "error": f"File {file_name} not found!"
+            "error_type": 404,
+            "file_name": file_name
         })
     return FileResponse(UPLOAD_DIR / file_name)
 
