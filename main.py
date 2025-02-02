@@ -25,6 +25,7 @@ IMAGE_FILE_NAME = os.getenv("IMAGE_FILE_NAME", "flashcards.pdf")
 
 SERVER_URL = os.getenv("SERVER_URL", "http://localhost:8000")
 
+
 def get_timestamp():
     return datetime.now().strftime("%Y%m%d%H%M%S")
 
@@ -80,23 +81,6 @@ async def generate_pdf(
 
     font = ImageFont.truetype('./assets/Roboto-Medium.ttf', 30)
 
-    pdf_path = None
-
-    if not exclude_images:
-        pdf_path = UPLOAD_DIR / get_timestamped_filename(IMAGE_FILE_NAME)
-        pdf = Image.new("RGB", pdf_size, "white")
-        draw = ImageDraw.Draw(pdf)
-
-        for i, img in enumerate(pdf_images):
-            x = (i % grid_size[0]) * card_size[0]
-            y = (i // grid_size[0]) * card_size[1]
-            img_x = x + (card_size[0] - img.width) // 2
-            img_y = y + (card_size[1] - img.height) // 2
-            pdf.paste(img, (img_x, img_y))
-            draw.rectangle([x, y, x + card_size[0], y + card_size[1]], outline="black", width=2)  # Draw border
-
-        pdf.save(pdf_path, "PDF")
-
     pdf_words_path = UPLOAD_DIR / get_timestamped_filename(WORD_FILE_NAME)
     word_pdf = Image.new("RGB", pdf_size, "white")
     draw = ImageDraw.Draw(word_pdf)
@@ -114,11 +98,29 @@ async def generate_pdf(
 
     word_pdf.save(pdf_words_path, "PDF")
 
-    return templates.TemplateResponse("pdf_link.html", {
-        "request": request,
-        "pdf_url": f"/uploads/{pdf_path.name}" if not pdf_path else None,
+    body = {
         "pdf_words_url": f"/uploads/{pdf_words_path.name}",
-    })
+    }
+
+    if not exclude_images:
+        pdf_path = UPLOAD_DIR / get_timestamped_filename(IMAGE_FILE_NAME)
+        pdf = Image.new("RGB", pdf_size, "white")
+        draw = ImageDraw.Draw(pdf)
+
+        for i, img in enumerate(pdf_images):
+            x = (i % grid_size[0]) * card_size[0]
+            y = (i // grid_size[0]) * card_size[1]
+            img_x = x + (card_size[0] - img.width) // 2
+            img_y = y + (card_size[1] - img.height) // 2
+            pdf.paste(img, (img_x, img_y))
+            draw.rectangle([x, y, x + card_size[0], y + card_size[1]], outline="black", width=2)  # Draw border
+
+        pdf.save(pdf_path, "PDF")
+        body["pdf_url"] = f"/uploads/{pdf_path.name}"
+
+    body["request"] = request
+
+    return templates.TemplateResponse("pdf_link.html", body)
 
 
 @app.get("/uploads/{file_name}")
