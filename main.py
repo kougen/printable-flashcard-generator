@@ -70,12 +70,10 @@ async def generate_pdf(
     pdf_images = []
     pdf_words = []
 
-    page_count = num_cards // (grid_size[0] * grid_size[1]) + 1
-
     for i in range(num_cards):
         if not exclude_images:
             img = Image.open(io.BytesIO(await images[i].read()))
-            img.thumbnail(card_size)  # Keep aspect ratio
+            img.thumbnail(card_size)
             pdf_images.append(img)
         pdf_words.append(words[i])
 
