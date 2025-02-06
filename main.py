@@ -21,6 +21,7 @@ IMAGE_FILE_NAME = os.getenv("IMAGE_FILE_NAME", "flashcards.pdf")
 
 SERVER_URL = os.getenv("SERVER_URL", "http://localhost:8000")
 FORCE_HTTPS = os.getenv("FORCE_HTTPS", "false").lower() == "true"
+
 TRUSTED_HOSTS = os.getenv("TRUSTED_HOSTS", "").split(",")
 
 templates = Jinja2Templates(directory="templates")
@@ -29,7 +30,7 @@ app = FastAPI()
 if FORCE_HTTPS:
     app.add_middleware(HTTPSRedirectMiddleware)
 
-if TRUSTED_HOSTS:
+if TRUSTED_HOSTS and TRUSTED_HOSTS != [""]:
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=TRUSTED_HOSTS)
 
 
