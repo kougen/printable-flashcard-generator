@@ -1,5 +1,4 @@
 fastapi
-fastapi[standard]
 pillow
 jinja2
 python-multipart
