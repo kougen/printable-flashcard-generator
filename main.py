@@ -11,19 +11,34 @@ import uvicorn
 from dotenv import load_dotenv
 from datetime import datetime
 
-load_dotenv()
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-templates = Jinja2Templates(directory="templates")
-app = FastAPI()
-UPLOAD_DIR = Path("uploads")
-UPLOAD_DIR.mkdir(exist_ok=True)
-STATIC_DIR = Path("static/js")
-STATIC_DIR.mkdir(exist_ok=True, parents=True)
+load_dotenv()
 
 WORD_FILE_NAME = os.getenv("WORD_FILE_NAME", "flashcards_words.pdf")
 IMAGE_FILE_NAME = os.getenv("IMAGE_FILE_NAME", "flashcards.pdf")
 
 SERVER_URL = os.getenv("SERVER_URL", "http://localhost:8000")
+FORCE_HTTPS = os.getenv("FORCE_HTTPS", "false").lower() == "true"
+
+TRUSTED_HOSTS = os.getenv("TRUSTED_HOSTS", "").split(",")
+
+templates = Jinja2Templates(directory="templates")
+app = FastAPI()
+
+if FORCE_HTTPS:
+    app.add_middleware(HTTPSRedirectMiddleware)
+
+if TRUSTED_HOSTS and TRUSTED_HOSTS != [""]:
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=TRUSTED_HOSTS)
+
+
+UPLOAD_DIR = Path("uploads")
+UPLOAD_DIR.mkdir(exist_ok=True)
+STATIC_DIR = Path("static/js")
+STATIC_DIR.mkdir(exist_ok=True, parents=True)
+
 
 
 def get_timestamp():

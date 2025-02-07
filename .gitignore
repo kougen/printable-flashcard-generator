@@ -2,8 +2,9 @@
 __pycache__/
 .env
 
+# output or generated files
 *.pdf
-
 *.yml
 
 !docker-compose.example.yml
+!example.*
