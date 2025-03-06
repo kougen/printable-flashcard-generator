@@ -1,12 +1,13 @@
 import os
 
-from fastapi import FastAPI, Request, Form, UploadFile, File
+from fastapi import FastAPI, Request, Form, UploadFile
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from typing import List, Optional
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 import io
+import textwrap
 import uvicorn
 from dotenv import load_dotenv
 from datetime import datetime
@@ -92,22 +93,37 @@ async def generate_pdf(
             pdf_images.append(img)
         pdf_words.append(words[i])
 
-    font = ImageFont.truetype('./assets/Roboto-Medium.ttf', 30)
+    font_path = './assets/Roboto-Medium.ttf'
+    font_size = 30
+    font = ImageFont.truetype(font_path, font_size)
 
     pdf_words_path = UPLOAD_DIR / get_timestamped_filename(WORD_FILE_NAME)
     word_pdf = Image.new("RGB", pdf_size, "white")
     draw = ImageDraw.Draw(word_pdf)
 
     for i, word in enumerate(pdf_words):
-        x = (i % grid_size[0]) * card_size[0] + card_size[0] // 2
-        y = (i // grid_size[0]) * card_size[1] + card_size[1] // 2
-        draw.text((x, y), word, fill="black", anchor="mm", font=font)
-        draw.rectangle([
-            (i % grid_size[0]) * card_size[0],
-            (i // grid_size[0]) * card_size[1],
-            (i % grid_size[0]) * card_size[0] + card_size[0],
-            (i // grid_size[0]) * card_size[1] + card_size[1]
-        ], outline="black", width=2)  # Draw border for words
+        x = (i % grid_size[0]) * card_size[0]
+        y = (i // grid_size[0]) * card_size[1]
+        box_width, box_height = card_size
+
+        max_width = box_width - 20
+        wrapped_text = []
+        for line in textwrap.wrap(word, width=20):
+            bbox = draw.textbbox((0, 0), line, font=font)
+            if bbox[2] - bbox[0] > max_width:
+                wrapped_text.extend(textwrap.wrap(line, width=15))
+            else:
+                wrapped_text.append(line)
+
+        total_text_height = sum(draw.textbbox((0, 0), line, font=font)[3] for line in wrapped_text)
+        text_y = y + (box_height - total_text_height) // 2
+
+        for line in wrapped_text:
+            line_width = draw.textbbox((0, 0), line, font=font)[2]
+            text_x = x + (box_width - line_width) // 2
+            draw.text((text_x, text_y), line, fill="black", font=font)
+            text_y += font_size
+        draw.rectangle([x, y, x + box_width, y + box_height], outline="black", width=2)
 
     word_pdf.save(pdf_words_path, "PDF")
 
@@ -126,7 +142,7 @@ async def generate_pdf(
             img_x = x + (card_size[0] - img.width) // 2
             img_y = y + (card_size[1] - img.height) // 2
             pdf.paste(img, (img_x, img_y))
-            draw.rectangle([x, y, x + card_size[0], y + card_size[1]], outline="black", width=2)  # Draw border
+            draw.rectangle([x, y, x + card_size[0], y + card_size[1]], outline="black", width=2)
 
         pdf.save(pdf_path, "PDF")
         body["pdf_url"] = f"/uploads/{pdf_path.name}"
