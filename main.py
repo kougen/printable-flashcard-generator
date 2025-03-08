@@ -6,6 +6,7 @@ from fastapi.templating import Jinja2Templates
 from typing import List, Optional
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
+from PyPDF2 import PdfMerger
 import io
 import textwrap
 import uvicorn
@@ -78,74 +79,108 @@ async def generate_pdf(
         images: Optional[List[UploadFile]] = Form(None),
         exclude_images: Optional[bool] = Form(False)
 ):
-    num_cards = len(words)
     grid_size = (3, 5)
     card_size = (300, 200)
-
-    pdf_size = (grid_size[0] * card_size[0], grid_size[1] * card_size[1])
-    pdf_images = []
-    pdf_words = []
-
-    for i in range(num_cards):
-        if not exclude_images:
-            img = Image.open(io.BytesIO(await images[i].read()))
-            img.thumbnail(card_size)
-            pdf_images.append(img)
-        pdf_words.append(words[i])
+    page_size = (grid_size[0] * card_size[0], grid_size[1] * card_size[1])
+    items_per_page = grid_size[0] * grid_size[1]
 
     font_path = './assets/Roboto-Medium.ttf'
     font_size = 30
     font = ImageFont.truetype(font_path, font_size)
 
-    pdf_words_path = UPLOAD_DIR / get_timestamped_filename(WORD_FILE_NAME)
-    word_pdf = Image.new("RGB", pdf_size, "white")
-    draw = ImageDraw.Draw(word_pdf)
+    word_pdf_pages = []
+    image_pdf_pages = []
 
-    for i, word in enumerate(pdf_words):
-        x = (i % grid_size[0]) * card_size[0]
-        y = (i // grid_size[0]) * card_size[1]
-        box_width, box_height = card_size
+    total_words = len(words)
+    num_word_pages = (total_words + items_per_page - 1) // items_per_page
 
-        max_width = box_width - 20
-        wrapped_text = []
-        for line in textwrap.wrap(word, width=20):
-            bbox = draw.textbbox((0, 0), line, font=font)
-            if bbox[2] - bbox[0] > max_width:
-                wrapped_text.extend(textwrap.wrap(line, width=15))
-            else:
-                wrapped_text.append(line)
+    for page in range(num_word_pages):
+        pdf_path = UPLOAD_DIR / get_timestamped_filename(f"words_page_{page}.pdf")
+        word_pdf_pages.append(pdf_path)
 
-        total_text_height = sum(draw.textbbox((0, 0), line, font=font)[3] for line in wrapped_text)
-        text_y = y + (box_height - total_text_height) // 2
+        page_img = Image.new("RGB", page_size, "white")
+        draw = ImageDraw.Draw(page_img)
 
-        for line in wrapped_text:
-            line_width = draw.textbbox((0, 0), line, font=font)[2]
-            text_x = x + (box_width - line_width) // 2
-            draw.text((text_x, text_y), line, fill="black", font=font)
-            text_y += font_size
-        draw.rectangle([x, y, x + box_width, y + box_height], outline="black", width=2)
+        for i in range(items_per_page):
+            word_index = page * items_per_page + i
+            if word_index >= total_words:
+                break
 
-    word_pdf.save(pdf_words_path, "PDF")
+            x = (i % grid_size[0]) * card_size[0]
+            y = (i // grid_size[0]) * card_size[1]
+
+            wrapped_text = textwrap.wrap(words[word_index], width=15)
+
+            total_text_height = sum(draw.textbbox((0, 0), line, font=font)[3] for line in wrapped_text)
+            text_y = y + (card_size[1] - total_text_height) // 2
+
+            for line in wrapped_text:
+                line_width = draw.textbbox((0, 0), line, font=font)[2]
+                text_x = x + (card_size[0] - line_width) // 2
+                draw.text((text_x, text_y), line, fill="black", font=font)
+                text_y += font_size
+
+            draw.rectangle([x, y, x + card_size[0], y + card_size[1]], outline="black", width=2)
+
+        page_img.save(pdf_path, "PDF")
+
+    final_word_pdf_path = UPLOAD_DIR / get_timestamped_filename("final_words.pdf")
+    word_merger = PdfMerger()
+
+    for pdf in word_pdf_pages:
+        word_merger.append(str(pdf))
+
+    word_merger.write(final_word_pdf_path)
+    word_merger.close()
+
+    for pdf in word_pdf_pages:
+        pdf.unlink()
 
     body = {
-        "pdf_words_url": f"/uploads/{pdf_words_path.name}",
+        "pdf_words_url": f"/uploads/{final_word_pdf_path.name}",
     }
 
     if not exclude_images:
-        pdf_path = UPLOAD_DIR / get_timestamped_filename(IMAGE_FILE_NAME)
-        pdf = Image.new("RGB", pdf_size, "white")
-        draw = ImageDraw.Draw(pdf)
+        total_images = len(images)
+        num_image_pages = (total_images + items_per_page - 1) // items_per_page
 
-        for i, img in enumerate(pdf_images):
-            x = (i % grid_size[0]) * card_size[0]
-            y = (i // grid_size[0]) * card_size[1]
-            img_x = x + (card_size[0] - img.width) // 2
-            img_y = y + (card_size[1] - img.height) // 2
-            pdf.paste(img, (img_x, img_y))
-            draw.rectangle([x, y, x + card_size[0], y + card_size[1]], outline="black", width=2)
+        for page in range(num_image_pages):
+            pdf_path = UPLOAD_DIR / get_timestamped_filename(f"images_page_{page}.pdf")
+            image_pdf_pages.append(pdf_path)
 
-        pdf.save(pdf_path, "PDF")
-        body["pdf_url"] = f"/uploads/{pdf_path.name}"
+            page_img = Image.new("RGB", page_size, "white")
+            draw = ImageDraw.Draw(page_img)
+
+            for i in range(items_per_page):
+                image_index = page * items_per_page + i
+                if image_index >= total_images:
+                    break
+
+                x = (i % grid_size[0]) * card_size[0]
+                y = (i // grid_size[0]) * card_size[1]
+
+                img = Image.open(io.BytesIO(await images[image_index].read()))
+                img.thumbnail(card_size)
+                img_x = x + (card_size[0] - img.width) // 2
+                img_y = y + (card_size[1] - img.height) // 2
+                page_img.paste(img, (img_x, img_y))
+
+                draw.rectangle([x, y, x + card_size[0], y + card_size[1]], outline="black", width=2)
+
+            page_img.save(pdf_path, "PDF")
+
+        final_image_pdf_path = UPLOAD_DIR / get_timestamped_filename("final_images.pdf")
+        image_merger = PdfMerger()
+
+        for pdf in image_pdf_pages:
+            image_merger.append(str(pdf))
+
+        image_merger.write(final_image_pdf_path)
+        image_merger.close()
+
+        for pdf in image_pdf_pages:
+            pdf.unlink()
+        body["pdf_images_url"] = f"/uploads/{final_image_pdf_path.name}"
 
     body["request"] = request
 
