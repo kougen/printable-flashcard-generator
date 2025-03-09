@@ -5,6 +5,7 @@ __pycache__/
 # output or generated files
 *.pdf
 *.yml
+!/.github/**/*
 
 !docker-compose.example.yml
 !example.*
