@@ -27,12 +27,12 @@ jobs:
 
       - name: Build and push Docker image (PR)
         run: |
-          IMAGE_NAME="${{ github.repository_owner }}/${{ github.event.repository.name }}"
-          GHCR_IMAGE="ghcr.io/$IMAGE_NAME"
+          GHCR_IMAGE="ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}"
+          DOCKERHUB_IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}"
           TAG="pr-${{ env.PR_NUMBER }}"
           
-          docker buildx build -t $IMAGE_NAME:$TAG .
-          docker push $IMAGE_NAME:$TAG
+          docker buildx build -t $DOCKERHUB_IMAGE:$TAG .
+          docker push $DOCKERHUB_IMAGE:$TAG
 
-          docker tag $IMAGE_NAME:$TAG $GHCR_IMAGE:$TAG
+          docker tag $DOCKERHUB_IMAGE:$TAG $GHCR_IMAGE:$TAG
           docker push $GHCR_IMAGE:$TAG
