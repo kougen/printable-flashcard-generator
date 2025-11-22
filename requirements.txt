@@ -1,8 +1,0 @@
-fastapi
-pillow
-jinja2
-python-multipart
-uvicorn
-requests
-python-dotenv
-pypdf2
