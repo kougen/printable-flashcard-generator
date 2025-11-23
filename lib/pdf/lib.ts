@@ -14,6 +14,16 @@ export const ITEMS_PER_PAGE = GRID_COLS * GRID_ROWS;
 
 export const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 
+export type CellPosition = {
+  pageIndex: number;
+  cellIndex: number;
+  globalIndex: number;
+  col: number;
+  row: number;
+  x: number;
+  y: number;
+};
+
 export const drawRectangle = (page: PDFPage, x: number, y: number) => {
   page.drawRectangle({
     x,
@@ -25,18 +35,21 @@ export const drawRectangle = (page: PDFPage, x: number, y: number) => {
   });
 }
 
-export const createPdf = async (pdf: PDFDocument, filename: string) => {
-  const pdfBytes = await pdf.save();
-  const timestampedFilename = getTimestampedFilename(filename);
-  const pdfPath = path.join(UPLOAD_DIR, timestampedFilename);
-  await fs.writeFile(pdfPath, pdfBytes);
-  return `/uploads/${timestampedFilename}`;
-}
+export function* gridPositions(totalItems: number): Generator<CellPosition> {
+  const numPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
 
-function getTimestampedFilename(base: string) {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const random = crypto.randomBytes(4).toString("hex");
-  const ext = path.extname(base) || ".pdf";
-  const name = path.basename(base, ext);
-  return `${name}_${timestamp}_${random}${ext}`;
+  for (let pageIndex = 0; pageIndex < numPages; pageIndex++) {
+    for (let cellIndex = 0; cellIndex < ITEMS_PER_PAGE; cellIndex++) {
+      const globalIndex = pageIndex * ITEMS_PER_PAGE + cellIndex;
+      if (globalIndex >= totalItems) return;
+
+      const col = cellIndex % GRID_COLS;
+      const row = Math.floor(cellIndex / GRID_COLS);
+
+      const x = col * CARD_WIDTH;
+      const y = PAGE_HEIGHT - (row + 1) * CARD_HEIGHT;
+
+      yield {pageIndex, cellIndex, globalIndex, col, row, x, y};
+    }
+  }
 }

@@ -1,69 +1,55 @@
-import {PDFDocument} from "pdf-lib";
+import {PDFDocument, PDFPage} from "pdf-lib";
 import {
   CARD_HEIGHT,
   CARD_WIDTH,
-  createPdf,
   drawRectangle,
-  GRID_COLS,
-  ITEMS_PER_PAGE,
+  gridPositions,
   PAGE_HEIGHT,
   PAGE_WIDTH
 } from "./lib";
 
-export const generateImagesPdf = async (images: File[]) => {
+export const generateImagesPdf = async (images: File[]): Promise<Uint8Array> => {
   const imagesPdf = await PDFDocument.create();
   const totalImages = images.length;
-  const numImagePages = Math.ceil(totalImages / ITEMS_PER_PAGE);
 
-  for (let pageIndex = 0; pageIndex < numImagePages; pageIndex++) {
-    const page = imagesPdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+  let currentPageIndex = -1;
+  let currentPage: PDFPage | null = null;
 
-    for (let i = 0; i < ITEMS_PER_PAGE; i++) {
-      const imageIndex = pageIndex * ITEMS_PER_PAGE + i;
-      if (imageIndex >= totalImages) {
-        break;
-      }
-
-      const file = images[imageIndex];
-      const imgBytes = Buffer.from(await file.arrayBuffer());
-
-      let embeddedImage;
-      if (file.type === "image/png") {
-        embeddedImage = await imagesPdf.embedPng(imgBytes);
-      } else {
-        embeddedImage = await imagesPdf.embedJpg(imgBytes);
-      }
-
-      const col = i % GRID_COLS;
-      const row = Math.floor(i / GRID_COLS);
-
-      const x = col * CARD_WIDTH;
-      const y = PAGE_HEIGHT - (row + 1) * CARD_HEIGHT;
-
-      const imgWidth = embeddedImage.width;
-      const imgHeight = embeddedImage.height;
-
-      const scale = Math.min(
-        CARD_WIDTH / imgWidth,
-        CARD_HEIGHT / imgHeight,
-      );
-
-      const drawWidth = imgWidth * scale;
-      const drawHeight = imgHeight * scale;
-
-      const imgX = x + (CARD_WIDTH - drawWidth) / 2;
-      const imgY = y + (CARD_HEIGHT - drawHeight) / 2;
-
-      drawRectangle(page, x, y);
-
-      page.drawImage(embeddedImage, {
-        x: imgX,
-        y: imgY,
-        width: drawWidth,
-        height: drawHeight,
-      });
+  for (const pos of gridPositions(totalImages)) {
+    if (pos.pageIndex !== currentPageIndex) {
+      currentPage = imagesPdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+      currentPageIndex = pos.pageIndex;
     }
+
+    if (!currentPage) continue;
+
+    const file = images[pos.globalIndex];
+    const imgBytes = Buffer.from(await file.arrayBuffer());
+
+    const embeddedImage =
+      file.type === "image/png"
+        ? await imagesPdf.embedPng(imgBytes)
+        : await imagesPdf.embedJpg(imgBytes);
+
+    const imgWidth = embeddedImage.width;
+    const imgHeight = embeddedImage.height;
+
+    const scale = Math.min(CARD_WIDTH / imgWidth, CARD_HEIGHT / imgHeight);
+    const drawWidth = imgWidth * scale;
+    const drawHeight = imgHeight * scale;
+
+    const imgX = pos.x + (CARD_WIDTH - drawWidth) / 2;
+    const imgY = pos.y + (CARD_HEIGHT - drawHeight) / 2;
+
+    drawRectangle(currentPage, pos.x, pos.y);
+
+    currentPage.drawImage(embeddedImage, {
+      x: imgX,
+      y: imgY,
+      width: drawWidth,
+      height: drawHeight,
+    });
   }
 
-  return await createPdf(imagesPdf, "final_images.pdf");
-}
+  return await imagesPdf.save();
+};

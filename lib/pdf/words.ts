@@ -1,65 +1,58 @@
-import {PDFDocument, rgb, StandardFonts} from "pdf-lib";
+import {PDFDocument, PDFPage, rgb, StandardFonts} from "pdf-lib";
 import {
-  ITEMS_PER_PAGE,
   PAGE_HEIGHT,
   PAGE_WIDTH,
-  GRID_COLS,
   CARD_WIDTH,
   CARD_HEIGHT,
   drawRectangle,
-  createPdf
+  gridPositions
 } from "./lib";
 
 const FONT_SIZE = 30;
 
-export const generateWordsPdf = async (words: string[]) => {
+export const generateWordsPdf = async (words: string[]): Promise<Uint8Array> => {
   const wordsPdf = await PDFDocument.create();
   const font = await wordsPdf.embedFont(StandardFonts.Helvetica);
 
   const totalWords = words.length;
-  const numWordPages = Math.ceil(totalWords / ITEMS_PER_PAGE);
 
-  for (let pageIndex = 0; pageIndex < numWordPages; pageIndex++) {
-    const page = wordsPdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+  let currentPageIndex = -1;
+  let currentPage: PDFPage | null = null;
 
-    for (let i = 0; i < ITEMS_PER_PAGE; i++) {
-      const wordIndex = pageIndex * ITEMS_PER_PAGE + i;
-      if (wordIndex >= totalWords) {
-        break;
-      }
+  for (const pos of gridPositions(totalWords)) {
+    if (pos.pageIndex !== currentPageIndex) {
+      currentPage = wordsPdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+      currentPageIndex = pos.pageIndex;
+    }
 
-      const word = words[wordIndex];
-      const col = i % GRID_COLS;
-      const row = Math.floor(i / GRID_COLS);
+    if (!currentPage) continue;
 
-      const x = col * CARD_WIDTH;
-      const y = PAGE_HEIGHT - (row + 1) * CARD_HEIGHT;
+    const word = words[pos.globalIndex];
 
-      drawRectangle(page, x, y);
+    drawRectangle(currentPage, pos.x, pos.y);
 
-      const lines = wrapTextByChars(word, 15);
-      const totalTextHeight = lines.length * FONT_SIZE;
-      let textY = y + (CARD_HEIGHT + totalTextHeight) / 2 - FONT_SIZE;
+    const lines = wrapTextByChars(word, 15);
+    const totalTextHeight = lines.length * FONT_SIZE;
+    let textY = pos.y + (CARD_HEIGHT + totalTextHeight) / 2 - FONT_SIZE;
 
-      for (const line of lines) {
-        const lineWidth = font.widthOfTextAtSize(line, FONT_SIZE);
-        const textX = x + (CARD_WIDTH - lineWidth) / 2;
+    for (const line of lines) {
+      const lineWidth = font.widthOfTextAtSize(line, FONT_SIZE);
+      const textX = pos.x + (CARD_WIDTH - lineWidth) / 2;
 
-        page.drawText(line, {
-          x: textX,
-          y: textY,
-          size: FONT_SIZE,
-          font,
-          color: rgb(0, 0, 0),
-        });
+      currentPage.drawText(line, {
+        x: textX,
+        y: textY,
+        size: FONT_SIZE,
+        font,
+        color: rgb(0, 0, 0),
+      });
 
-        textY -= FONT_SIZE;
-      }
+      textY -= FONT_SIZE;
     }
   }
 
-  return await createPdf(wordsPdf, "final_words.pdf");
-}
+  return await wordsPdf.save();
+};
 
 function wrapTextByChars(text: string, maxChars = 15): string[] {
   const words = text.split(/\s+/);
