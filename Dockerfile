@@ -57,4 +57,4 @@ USER nextjs
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "bun db:deploy && bun server.js"]
+CMD ["sh", "-c", "bun db:deploy && bun start"]
