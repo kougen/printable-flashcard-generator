@@ -15,6 +15,9 @@ RUN bun install --ci
 
 FROM base AS builder
 
+ARG DATABASE_URL="postgresql://user:pass@localhost:5432/dummy"
+ENV DATABASE_URL=$DATABASE_URL
+
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
