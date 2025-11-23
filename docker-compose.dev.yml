@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres
+    restart: always
+    env_file:
+      - .env.docker
+  server:
+    env_file:
+      - .env.dev
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db

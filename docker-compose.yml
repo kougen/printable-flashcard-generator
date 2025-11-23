@@ -1,0 +1,8 @@
+services:
+  db:
+    image: postgres
+    ports:
+      - "1001:5432"
+    restart: always
+    env_file:
+      - .env.docker
