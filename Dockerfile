@@ -43,7 +43,9 @@ ENV NODE_ENV=production
 ENV PORT=3000
 
 RUN addgroup --system nextjs \
-  && adduser --system --ingroup nextjs nextjs
+  && adduser --system --ingroup nextjs nextjs \
+  && mkdir -p /app/storage/pdfs \
+  && chown -R nextjs:nextjs /app
 
 #COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
