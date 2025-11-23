@@ -6,9 +6,7 @@ export default function SignInButton() {
   const onClick = async () => {
     await authClient.signIn.social({
       provider: "google",
-      callbackURL: "/dashboard",
       errorCallbackURL: "/error",
-      newUserCallbackURL: "/welcome",
     });
   }
 
