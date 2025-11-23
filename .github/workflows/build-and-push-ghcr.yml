@@ -10,8 +10,6 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    env:
-      BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
 
     steps:
       - name: Checkout repository
@@ -33,7 +31,11 @@ jobs:
           DOCKERHUB_IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}"
           TAG="pr-${{ env.PR_NUMBER }}"
           
-          docker buildx build -t $DOCKERHUB_IMAGE:$TAG .
+          docker buildx build \
+            --build-arg BETTER_AUTH_SECRET=dummybetterauthsecret \
+            --build-arg GOOGLE_CLIENT_ID=dummygoogleclientid \
+            --build-arg GOOGLE_CLIENT_SECRET=dummygoogleclientsecret \
+            -t $DOCKERHUB_IMAGE:$TAG .
           docker push $DOCKERHUB_IMAGE:$TAG
 
           docker tag $DOCKERHUB_IMAGE:$TAG $GHCR_IMAGE:$TAG
