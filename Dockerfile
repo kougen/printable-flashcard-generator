@@ -37,7 +37,7 @@ ENV PORT=3000
 RUN addgroup --system nextjs \
   && adduser --system --ingroup nextjs nextjs
 
-COPY --from=builder /app/public ./public
+#COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next/standalone ./
