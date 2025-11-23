@@ -3,9 +3,9 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-#RUN apt-get update \
-#  && apt-get install -y --no-install-recommends openssl \
-#  && rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl \
+  && rm -rf /var/lib/apt/lists/*
 
 FROM base AS deps
 
@@ -22,7 +22,7 @@ COPY . .
 
 RUN bun db:generate
 
-RUN bunx next build
+RUN bun run build
 
 FROM base AS runner
 
@@ -40,6 +40,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/package.json ./package.json
+COPY /prisma.config.ts ./prisma.config.ts
 
 USER nextjs
 
