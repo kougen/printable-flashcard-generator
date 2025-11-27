@@ -1,10 +1,11 @@
 "use client";
 
 import {signIn} from "@/lib/auth-client";
+import {Button} from "@/components/ui/button";
 
 export default function SignInButton() {
-  return <button onClick={signIn} className="px-4 py-2 bg-blue-600 text-white rounded">
+  return <Button onClick={signIn}>
     Sign in with Google
-  </button>
+  </Button>
 
 }
