@@ -2,6 +2,7 @@
 
 import {Avatar, AvatarImage} from "@/components/ui/avatar";
 import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu";
+import {signOut} from "@/lib/auth-client";
 
 type ProfileDropdownProps = {
   email: string;
@@ -17,7 +18,7 @@ export default function ProfileDropdown({email, image}: ProfileDropdownProps) {
     </DropdownMenuTrigger>
     <DropdownMenuContent>
       <DropdownMenuItem>History</DropdownMenuItem>
-      <DropdownMenuItem>Log out</DropdownMenuItem>
+      <DropdownMenuItem onClick={signOut}>Log out</DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>
 }
