@@ -1,4 +1,7 @@
+"use client";
+
 import {Avatar, AvatarImage} from "@/components/ui/avatar";
+import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu";
 
 type ProfileDropdownProps = {
   email: string;
@@ -6,7 +9,15 @@ type ProfileDropdownProps = {
 }
 
 export default function ProfileDropdown({email, image}: ProfileDropdownProps) {
-  return <Avatar>
-    <AvatarImage src={image || ""} alt={email}/>
-  </Avatar>
+  return <DropdownMenu>
+    <DropdownMenuTrigger>
+      <Avatar>
+        <AvatarImage src={image || ""} alt={email}/>
+      </Avatar>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent>
+      <DropdownMenuItem>History</DropdownMenuItem>
+      <DropdownMenuItem>Log out</DropdownMenuItem>
+    </DropdownMenuContent>
+  </DropdownMenu>
 }
