@@ -11,19 +11,19 @@ type ProfileDropdownProps = {
 
 export default function ProfileDropdown({email, image}: ProfileDropdownProps) {
 
-  const _signOut = () => {
+  const handleSignOut = () => {
     signOut().catch(console.error);
   }
 
   return <DropdownMenu>
-    <DropdownMenuTrigger asChild>
+    <DropdownMenuTrigger>
       <Avatar>
         <AvatarImage src={image || ""} alt={email}/>
       </Avatar>
     </DropdownMenuTrigger>
     <DropdownMenuContent>
       <DropdownMenuItem>History</DropdownMenuItem>
-      <DropdownMenuItem onClick={_signOut}>Log out</DropdownMenuItem>
+      <DropdownMenuItem onClick={handleSignOut}>Log out</DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>
 }
