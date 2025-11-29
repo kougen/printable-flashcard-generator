@@ -6,4 +6,8 @@ export const signIn = async () => {
   return await authClient.signIn.social({provider: "google", errorCallbackURL: "/error"});
 }
 
-export const {signOut, useSession} = authClient;
+export const signOut = async () => {
+  return await authClient.signOut();
+}
+
+export const {useSession} = authClient;
