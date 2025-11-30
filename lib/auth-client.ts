@@ -11,3 +11,4 @@ export const signOut = async () => {
 }
 
 export const {useSession} = authClient;
+

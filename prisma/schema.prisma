@@ -76,13 +76,22 @@ model Verification {
   @@map("verification")
 }
 
+enum PdfType {
+  IMAGES
+  WORDS
+}
+
 model GeneratedPdf {
-  id        String   @id @default(cuid())
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  path      String
-  createdAt DateTime @default(now())
-  expiresAt DateTime
+  id          String         @id @default(cuid())
+  userId      String?
+  user        User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  path        String
+  createdAt   DateTime       @default(now())
+  expiresAt   DateTime
+  type        PdfType
+  pairedPdfId String?
+  pairedPdf   GeneratedPdf?  @relation("PairedPdfs", fields: [pairedPdfId], references: [id], onDelete: Cascade)
+  pairedWith  GeneratedPdf[] @relation("PairedPdfs")
 
   @@index([userId])
   @@index([expiresAt])
