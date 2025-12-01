@@ -3,6 +3,16 @@ import {Geist, Geist_Mono} from "next/font/google";
 import "./globals.css";
 import React from "react";
 import {ThemeProvider} from "@/components/theme-provider";
+import {SidebarInset, SidebarProvider, SidebarTrigger} from "@/components/ui/sidebar";
+import {AppSidebar} from "@/components/app-sidebar";
+import {Separator} from "@/components/ui/separator";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList, BreadcrumbPage,
+  BreadcrumbSeparator
+} from "@/components/ui/breadcrumb";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,11 +29,12 @@ export const metadata: Metadata = {
   description: "Create your printer-friendly flashcard PDFs in seconds.",
 };
 
-export default function RootLayout({
-                                     children,
-                                   }: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout(
+  {
+    children,
+  }: Readonly<{
+    children: React.ReactNode;
+  }>) {
   return (
     <html lang="en" suppressHydrationWarning>
     <body
@@ -35,7 +46,12 @@ export default function RootLayout({
       enableSystem
       disableTransitionOnChange
     >
-      {children}
+      <SidebarProvider>
+        <AppSidebar/>
+        <SidebarInset>
+          {children}
+        </SidebarInset>
+      </SidebarProvider>
     </ThemeProvider>
     </body>
     </html>
