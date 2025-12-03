@@ -1,8 +1,8 @@
 import {redirect} from "next/navigation";
 import {getSession} from "@/lib/auth";
 import {prisma} from "@/lib/db";
-import {SiteHeader} from "@/components/site-header";
-import {PageWrapper} from "@/components/page-wrapper";
+import Image from "next/image";
+import {Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle} from "@/components/ui/item";
 
 export default async function ProfilePage() {
   const session = await getSession();
@@ -18,33 +18,33 @@ export default async function ProfilePage() {
     }
   });
 
-  return <>
-    <SiteHeader title="Generated Flashcard PDFs"/>
-    <PageWrapper>
-      <ul
-        className="list-disc pl-4"
-      >
-        {flashcardSets.map(flashcardSet => (
-          <li
-            className="mb-2 space-x-2"
-            key={flashcardSet.id}>
-            <strong>{flashcardSet.name}</strong> - {flashcardSet.flashcards.length} flashcards
-            <div>
-              {flashcardSet.flashcards.map(flashcard => (
-                <a
-                  key={flashcard.id}
-                  className="text-blue-600 underline mr-2"
-                  href={`/api/pdfs/${flashcard.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Download {flashcard.type} PDF
-                </a>
-              ))}
-            </div>
-          </li>
-        ))}
-      </ul>
-    </PageWrapper>
-  </>
+  return <div className="flex w-full max-w-md flex-col gap-6">
+    <ItemGroup className="gap-4">
+      {flashcardSets.map((flashcardSet) => (
+        <Item key={flashcardSet.id} variant="outline" asChild role="listitem">
+          <a href="#">
+            <ItemMedia variant="image">
+              <Image
+                src={`https://avatar.vercel.sh/${flashcardSet.title}`}
+                alt={flashcardSet.title}
+                width={32}
+                height={32}
+                className="object-cover grayscale"
+              />
+            </ItemMedia>
+            <ItemContent>
+              <ItemTitle className="line-clamp-1">
+                {flashcardSet.title} -{" "}
+                <span className="text-muted-foreground">{flashcardSet.album}</span>
+              </ItemTitle>
+              <ItemDescription>{flashcardSet.artist}</ItemDescription>
+            </ItemContent>
+            <ItemContent className="flex-none text-center">
+              <ItemDescription>{flashcardSet.duration}</ItemDescription>
+            </ItemContent>
+          </a>
+        </Item>
+      ))}
+    </ItemGroup>
+  </div>
 }

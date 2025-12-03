@@ -2,34 +2,36 @@
 
 import * as React from "react"
 import {
-  FileText,
-  SquareTerminal,
-} from "lucide-react"
+  IconListDetails,
+} from "@tabler/icons-react"
 
 import {NavMain} from "@/components/nav-main"
 import {NavUser} from "@/components/nav-user"
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
-  SidebarRail,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import {signIn, useSession} from "@/lib/auth-client";
 import {Button} from "@/components/ui/button";
-import {useRouter} from "next/navigation";
+import Link from "next/link";
+import {FileText} from "lucide-react";
 
 const nav = {
   navMain: [
     {
-      title: "Generation History",
+      title: "Generated Flashcards",
       url: "/history",
-      icon: SquareTerminal,
+      icon: IconListDetails,
     },
   ],
 }
 
 export function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
-  const router = useRouter();
   const {data} = useSession();
 
   const getContent = () => {
@@ -47,24 +49,19 @@ export function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
 
     return <NavMain items={nav.navMain}/>
   }
-
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              onClick={() => router.push("/")}
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              asChild
+              className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <div
-                className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                <FileText className="size-4"/>
-              </div>
-              <h1 className="flex items-center gap-2 text-md font-semibold">
-                Flashcard PDF Generator
-              </h1>
+              <Link href="/">
+                <FileText className="!size-5"/>
+                <span className="text-base font-semibold">Flashcard PDF Generator</span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -75,7 +72,6 @@ export function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <NavUser/>
       </SidebarFooter>
-      <SidebarRail/>
     </Sidebar>
   )
 }
