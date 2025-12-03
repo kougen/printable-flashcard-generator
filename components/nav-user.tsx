@@ -27,9 +27,11 @@ import {
 import {signOut, useSession} from "@/lib/auth-client";
 import {Badge} from "@/components/ui/badge";
 import {Spinner} from "@/components/ui/spinner";
+import {useRouter} from "next/navigation";
 
 
 export function NavUser() {
+  const router = useRouter();
   const {data, isPending} = useSession();
   const {isMobile} = useSidebar()
 
@@ -49,6 +51,11 @@ export function NavUser() {
   }
 
   const user = data.user;
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push("/");
+  }
 
   return (
     <SidebarMenu>
@@ -89,7 +96,7 @@ export function NavUser() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator/>
-            <DropdownMenuItem onClick={signOut}>
+            <DropdownMenuItem onClick={handleSignOut}>
               <LogOut/>
               Log out
             </DropdownMenuItem>

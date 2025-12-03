@@ -1,8 +1,11 @@
 import {NextRequest, NextResponse} from "next/server";
 import {prisma} from "@/lib/db";
 import {promises as fs} from "fs";
-import {convert} from "pdf-img-convert";
+import {promisify} from "util";
+import {execFile} from "child_process";
 import sharp from "sharp";
+
+const execFileAsync = promisify(execFile);
 
 export async function GET(_req: NextRequest, {params}: { params: Promise<{ id: string }> }) {
   const {id} = await params;
@@ -26,38 +29,26 @@ export async function GET(_req: NextRequest, {params}: { params: Promise<{ id: s
   }
 
   try {
-    const pdfBytes = await fs.readFile(pdf.path);
-    
-    // Convert first page of PDF to PNG
-    const pngPages = await convert(pdfBytes, {
-      page_numbers: [1],
-    });
+    const outputBase = "/tmp/thumbnail";
+    await execFileAsync("pdftoppm", [
+      pdf.path,
+      outputBase,
+      "-png",
+      "-singlefile",
+    ]);
 
-    if (!pngPages || pngPages.length === 0) {
-      return new NextResponse("Failed to generate thumbnail", {status: 500});
-    }
+    const pngPath = `${outputBase}.png`;
+    const bytes = await fs.readFile(pngPath);
 
-    // Get the first page as a Uint8Array
-    const firstPage = pngPages[0] as Uint8Array;
-    
-    // Resize to thumbnail size (e.g., 300px width, maintaining aspect ratio)
-    const thumbnailBuffer = await sharp(firstPage)
-      .resize(300, null, {
-        fit: "inside",
-        withoutEnlargement: true,
-      })
-      .png()
-      .toBuffer();
-
-    return new NextResponse(thumbnailBuffer, {
+    return new NextResponse(bytes, {
       status: 200,
       headers: {
         "Content-Type": "image/png",
-        "Cache-Control": "public, max-age=86400", // Cache for 1 day
+        "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
       },
     });
-  } catch (error) {
-    console.error("Error generating thumbnail:", error);
-    return new NextResponse("Failed to generate thumbnail", {status: 500});
+  } catch (e) {
+    console.error("Failed to generate thumbnail:", e);
+    return new NextResponse("Thumbnail generation failed", {status: 500});
   }
 }
