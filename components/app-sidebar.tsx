@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/sidebar"
 import {signIn, useSession} from "@/lib/auth-client";
 import {Button} from "@/components/ui/button";
-import {redirect} from "next/navigation";
+import {useRouter} from "next/navigation";
 
 const nav = {
   navMain: [
@@ -29,6 +29,7 @@ const nav = {
 }
 
 export function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
+  const router = useRouter();
   const {data} = useSession();
 
   const getContent = () => {
@@ -53,7 +54,7 @@ export function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              onClick={() => redirect("/")}
+              onClick={() => router.push("/")}
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
