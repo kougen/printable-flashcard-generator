@@ -9,9 +9,11 @@ export default async function ProfilePage() {
   }
 
   const user = session.user;
-  const pdfs = await prisma.generatedPdf.findMany({
-    where: {userId: user.id, type: "WORDS"},
-    include: {relatedPdfs: true}
+  const flashcardSets = await prisma.flashcardSet.findMany({
+    where: {userId: user.id},
+    include: {
+      flashcards: true,
+    }
   });
 
   return <div>
@@ -19,20 +21,24 @@ export default async function ProfilePage() {
     <ul
       className="list-disc pl-4"
     >
-      {pdfs.map(pdf => (
+      {flashcardSets.map(flashcardSet => (
         <li
           className="mb-2 space-x-2"
-          key={pdf.id}>
-          <a
-            className="text-primary hover:underline"
-            href={`/api/pdfs/${pdf.id}`}>Words PDF ({pdf.id})</a>
-          {pdf.relatedPdfs?.map(relatedPdf => (
-            <a
-              className="text-primary hover:underline"
-              key={relatedPdf.id} href={`/api/pdfs/${relatedPdf.id}`}>
-              Image PDF ({relatedPdf.id})
-            </a>
-          ))}
+          key={flashcardSet.id}>
+          <strong>{flashcardSet.name}</strong> - {flashcardSet.flashcards.length} flashcards
+          <div>
+            {flashcardSet.flashcards.map(flashcard => (
+              <a
+                key={flashcard.id}
+                className="text-blue-600 underline mr-2"
+                href={`/api/pdfs/${flashcard.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Download {flashcard.type} PDF
+              </a>
+            ))}
+          </div>
         </li>
       ))}
     </ul>
