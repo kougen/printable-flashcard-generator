@@ -26,6 +26,13 @@ export async function GET(_req: NextRequest, {params}: { params: Promise<{ id: s
   }
 
   try {
+    // Check if file exists before reading
+    try {
+      await fs.access(pdf.path);
+    } catch {
+      return new NextResponse("PDF file not found", {status: 404});
+    }
+
     const pdfBytes = await fs.readFile(pdf.path);
     
     // Convert first page of PDF to PNG
@@ -49,7 +56,7 @@ export async function GET(_req: NextRequest, {params}: { params: Promise<{ id: s
       .png()
       .toBuffer();
 
-    return new NextResponse(new Uint8Array(thumbnailBuffer), {
+    return new NextResponse(thumbnailBuffer, {
       status: 200,
       headers: {
         "Content-Type": "image/png",
