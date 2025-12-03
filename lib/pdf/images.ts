@@ -1,12 +1,27 @@
-import {PDFDocument, PDFPage} from "pdf-lib";
-import {
-  CARD_HEIGHT,
-  CARD_WIDTH,
-  drawRectangle,
-  gridPositions,
-  PAGE_HEIGHT,
-  PAGE_WIDTH
-} from "./lib";
+import {PDFDocument, PDFImage, PDFPage} from "pdf-lib";
+import {CARD_HEIGHT, CARD_WIDTH, drawRectangle, gridPositions, PAGE_HEIGHT, PAGE_WIDTH} from "./lib";
+import sharp from "sharp";
+
+export const embedImage = async (pdf: PDFDocument, file: File): Promise<PDFImage> => {
+  const bytes = Buffer.from(await file.arrayBuffer());
+  switch (file.type) {
+    case "image/png":
+      return await pdf.embedPng(bytes);
+    case "image/jpg":
+    case "image/jpeg":
+      return await pdf.embedJpg(bytes);
+    case "image/webp":
+    case "image/gif":
+    case "image/svg+xml":
+      const pngBuffer = await sharp(bytes)
+        .png()
+        .toBuffer();
+
+      return await pdf.embedPng(pngBuffer);
+    default:
+      throw new Error(`Unsupported image type: ${file.type}`);
+  }
+}
 
 export const generateImagesPdf = async (images: File[]): Promise<Uint8Array> => {
   const imagesPdf = await PDFDocument.create();
@@ -24,12 +39,8 @@ export const generateImagesPdf = async (images: File[]): Promise<Uint8Array> => 
     if (!currentPage) continue;
 
     const file = images[pos.globalIndex];
-    const imgBytes = Buffer.from(await file.arrayBuffer());
 
-    const embeddedImage =
-      file.type === "image/png"
-        ? await imagesPdf.embedPng(imgBytes)
-        : await imagesPdf.embedJpg(imgBytes);
+    const embeddedImage = await embedImage(imagesPdf, file);
 
     const imgWidth = embeddedImage.width;
     const imgHeight = embeddedImage.height;

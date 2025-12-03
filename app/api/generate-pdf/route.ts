@@ -57,33 +57,41 @@ export async function POST(req: NextRequest) {
 
   const responseBody: Record<string, unknown> = {};
 
-  if (!excludeImages && imageEntries.length) {
-    const imagesBytes = await generateImagesPdf(imageEntries);
-    const {url, record} = await storeGeneratedPdf({
-      bytes: imagesBytes,
-      baseFilename: "images.pdf",
-      ttlHours: 24 * 7,
-      type: "IMAGES",
-      flashcardSetId: flashcardSet.id,
-    });
+  try {
+    if (!excludeImages && imageEntries.length) {
+      const imagesBytes = await generateImagesPdf(imageEntries);
+      const {url, record} = await storeGeneratedPdf({
+        bytes: imagesBytes,
+        baseFilename: "images.pdf",
+        ttlHours: 24 * 7,
+        type: "IMAGES",
+        flashcardSetId: flashcardSet.id,
+      });
 
-    responseBody.pdf_images_url = url;
-    responseBody.pdf_images_id = record.id;
+      responseBody.pdf_images_url = url;
+      responseBody.pdf_images_id = record.id;
+    }
+
+    if (words.length) {
+      const wordsBytes = await generateWordsPdf(words);
+      const {url, record} = await storeGeneratedPdf({
+        bytes: wordsBytes,
+        baseFilename: "words.pdf",
+        ttlHours: 24 * 7,
+        type: "WORDS",
+        flashcardSetId: flashcardSet.id,
+      });
+
+      responseBody.pdf_words_url = url;
+      responseBody.pdf_words_id = record.id;
+    }
+
+    return NextResponse.json(responseBody);
+  } catch (e) {
+    console.error("PDF generation error:", e);
+    await prisma.flashcardSet.delete({where: {id: flashcardSet.id}});
+    return NextResponse.json({
+      message: "Failed to generate PDF",
+    }, {status: 500});
   }
-
-  if (words.length) {
-    const wordsBytes = await generateWordsPdf(words);
-    const {url, record} = await storeGeneratedPdf({
-      bytes: wordsBytes,
-      baseFilename: "words.pdf",
-      ttlHours: 24 * 7,
-      type: "WORDS",
-      flashcardSetId: flashcardSet.id,
-    });
-
-    responseBody.pdf_words_url = url;
-    responseBody.pdf_words_id = record.id;
-  }
-
-  return NextResponse.json(responseBody);
 }
