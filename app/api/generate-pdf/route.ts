@@ -4,11 +4,14 @@ import {generateWordsPdf} from "@/lib/pdf/words";
 import {storeGeneratedPdf} from "@/lib/storage";
 import {headers} from "next/headers";
 import {auth} from "@/lib/auth";
+import {prisma} from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   const contentType = req.headers.get("content-type") || "";
   if (!contentType.includes("multipart/form-data")) {
-    return new NextResponse("Expected multipart/form-data", {status: 400});
+    return NextResponse.json({
+      message: "Invalid content type, expected multipart/form-data",
+    }, {status: 400});
   }
 
   const formData = await req.formData();
@@ -18,6 +21,14 @@ export async function POST(req: NextRequest) {
     .map((w) => String(w).trim())
     .filter(Boolean);
 
+  const name = formData.get("name") as string;
+
+  if (!name) {
+    return NextResponse.json({
+      message: "Missing 'name' field",
+    }, {status: 400});
+  }
+
   const imageEntries = formData.getAll("images") as File[];
   const excludeImagesRaw = formData.get("exclude_images");
   const excludeImages =
@@ -26,28 +37,34 @@ export async function POST(req: NextRequest) {
     excludeImagesRaw === "on";
 
   if (!words.length && (excludeImages || !imageEntries.length)) {
-    return new NextResponse("No words or images provided", {status: 400});
+    return NextResponse.json({
+      message: "No words or images provided",
+    }, {status: 400});
   }
 
   const session = await auth.api.getSession({
     headers: await headers()
   })
 
-  console.log(session)
-
   const userId = session?.user?.id || undefined;
 
-  const responseBody: Record<string, unknown> = {};
+  const flashcardSet = await prisma.flashcardSet.create({
+    data: {
+      name: name,
+      userId: userId,
+    },
+  });
 
+  const responseBody: Record<string, unknown> = {};
 
   if (!excludeImages && imageEntries.length) {
     const imagesBytes = await generateImagesPdf(imageEntries);
     const {url, record} = await storeGeneratedPdf({
       bytes: imagesBytes,
       baseFilename: "images.pdf",
-      userId,
       ttlHours: 24 * 7,
-      type: "IMAGES"
+      type: "IMAGES",
+      flashcardSetId: flashcardSet.id,
     });
 
     responseBody.pdf_images_url = url;
@@ -59,12 +76,9 @@ export async function POST(req: NextRequest) {
     const {url, record} = await storeGeneratedPdf({
       bytes: wordsBytes,
       baseFilename: "words.pdf",
-      userId,
       ttlHours: 24 * 7,
       type: "WORDS",
-      pairedPdfIds: responseBody.pdf_images_id
-        ? [String(responseBody.pdf_images_id)]
-        : undefined,
+      flashcardSetId: flashcardSet.id,
     });
 
     responseBody.pdf_words_url = url;
