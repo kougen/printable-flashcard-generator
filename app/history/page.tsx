@@ -9,7 +9,10 @@ export default async function ProfilePage() {
   }
 
   const user = session.user;
-  const pdfs = await prisma.generatedPdf.findMany({where: {userId: user.id}});
+  const pdfs = await prisma.generatedPdf.findMany({
+    where: {userId: user.id, type: "WORDS"},
+    include: {relatedPdfs: true}
+  });
 
   return <div>
     <h1>Generation History</h1>
@@ -18,8 +21,19 @@ export default async function ProfilePage() {
     >
       {pdfs.map(pdf => (
         <li
-          className="text-sm cursor-pointer hover:underline"
-          key={pdf.id}>{pdf.path}</li>
+          className="mb-2 space-x-2"
+          key={pdf.id}>
+          <a
+            className="text-primary hover:underline"
+            href={`/api/pdfs/${pdf.id}`}>Words PDF ({pdf.id})</a>
+          {pdf.relatedPdfs?.map(relatedPdf => (
+            <a
+              className="text-primary hover:underline"
+              key={relatedPdf.id} href={`/api/pdfs/${relatedPdf.id}`}>
+              Image PDF ({relatedPdf.id})
+            </a>
+          ))}
+        </li>
       ))}
     </ul>
   </div>

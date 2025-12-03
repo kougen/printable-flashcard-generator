@@ -2,6 +2,7 @@ import path from "path";
 import crypto from "crypto";
 import {promises as fs} from "fs";
 import {prisma} from "@/lib/db";
+import {PdfType} from "@/prisma/generated/prisma/enums";
 
 const STORAGE_DIR = path.join(process.cwd(), "storage", "pdfs");
 
@@ -16,8 +17,10 @@ function buildFilename(base: string) {
 export async function storeGeneratedPdf(options: {
   bytes: Uint8Array;
   baseFilename: string;
+  type: PdfType;
   userId?: string;
   ttlHours?: number;
+  pairedPdfIds?: string[];
 }) {
   const {bytes, baseFilename, userId, ttlHours = 24 * 7} = options;
 
@@ -36,6 +39,12 @@ export async function storeGeneratedPdf(options: {
       userId: userId ?? null,
       path: absolutePath,
       expiresAt: expiresAt,
+      type: options.type,
+      relatedPdfs: options.pairedPdfIds
+        ? {
+          connect: options.pairedPdfIds.map((id) => ({id})),
+        }
+        : undefined,
     },
   });
 

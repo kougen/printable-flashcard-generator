@@ -39,18 +39,6 @@ export async function POST(req: NextRequest) {
 
   const responseBody: Record<string, unknown> = {};
 
-  if (words.length) {
-    const wordsBytes = await generateWordsPdf(words);
-    const {url, record} = await storeGeneratedPdf({
-      bytes: wordsBytes,
-      baseFilename: "words.pdf",
-      userId,
-      ttlHours: 24 * 7,
-    });
-
-    responseBody.pdf_words_url = url;
-    responseBody.pdf_words_id = record.id;
-  }
 
   if (!excludeImages && imageEntries.length) {
     const imagesBytes = await generateImagesPdf(imageEntries);
@@ -59,10 +47,28 @@ export async function POST(req: NextRequest) {
       baseFilename: "images.pdf",
       userId,
       ttlHours: 24 * 7,
+      type: "IMAGES"
     });
 
     responseBody.pdf_images_url = url;
     responseBody.pdf_images_id = record.id;
+  }
+
+  if (words.length) {
+    const wordsBytes = await generateWordsPdf(words);
+    const {url, record} = await storeGeneratedPdf({
+      bytes: wordsBytes,
+      baseFilename: "words.pdf",
+      userId,
+      ttlHours: 24 * 7,
+      type: "WORDS",
+      pairedPdfIds: responseBody.pdf_images_id
+        ? [String(responseBody.pdf_images_id)]
+        : undefined,
+    });
+
+    responseBody.pdf_words_url = url;
+    responseBody.pdf_words_id = record.id;
   }
 
   return NextResponse.json(responseBody);
