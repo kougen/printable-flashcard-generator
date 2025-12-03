@@ -26,13 +26,6 @@ export async function GET(_req: NextRequest, {params}: { params: Promise<{ id: s
   }
 
   try {
-    // Check if file exists before reading
-    try {
-      await fs.access(pdf.path);
-    } catch {
-      return new NextResponse("PDF file not found", {status: 404});
-    }
-
     const pdfBytes = await fs.readFile(pdf.path);
     
     // Convert first page of PDF to PNG
@@ -48,7 +41,7 @@ export async function GET(_req: NextRequest, {params}: { params: Promise<{ id: s
     const firstPage = pngPages[0] as Uint8Array;
     
     // Resize to thumbnail size (e.g., 300px width, maintaining aspect ratio)
-    const thumbnailBuffer = await sharp(Buffer.from(firstPage))
+    const thumbnailBuffer = await sharp(firstPage)
       .resize(300, null, {
         fit: "inside",
         withoutEnlargement: true,
