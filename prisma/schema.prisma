@@ -89,9 +89,9 @@ model GeneratedPdf {
   createdAt   DateTime       @default(now())
   expiresAt   DateTime
   type        PdfType
-  pairedPdfId String?
-  pairedPdf   GeneratedPdf?  @relation("PairedPdfs", fields: [pairedPdfId], references: [id], onDelete: Cascade)
-  pairedWith  GeneratedPdf[] @relation("PairedPdfs")
+  relatedPdfs GeneratedPdf[] @relation("RelatedPdfs")
+  parentPdf   GeneratedPdf?  @relation("RelatedPdfs", fields: [parentPdfId], references: [id], onDelete: Cascade)
+  parentPdfId String?
 
   @@index([userId])
   @@index([expiresAt])
