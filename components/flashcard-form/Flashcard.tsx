@@ -4,6 +4,7 @@ import {Card} from "./types";
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
 import Image from "next/image";
+import {useMemo} from "react";
 
 type FlashcardProps = {
   pageIndex: number;
@@ -11,24 +12,26 @@ type FlashcardProps = {
   card: Card;
   updateCardWord: (pageIndex: number, cardIndex: number, word: string) => void;
   updateCardImage: (pageIndex: number, cardIndex: number, file: File | null) => void;
-}
+};
 
-export default function Flashcard(
-  {
-    card,
-    pageIndex,
-    cardIndex,
-    updateCardWord,
-    updateCardImage,
-  }: FlashcardProps
-) {
+export default function Flashcard({
+                                    card,
+                                    pageIndex,
+                                    cardIndex,
+                                    updateCardWord,
+                                    updateCardImage,
+                                  }: FlashcardProps) {
+  const previewUrl = useMemo(() => {
+    if (card.image) {
+      return URL.createObjectURL(card.image);
+    }
+    return null;
+  }, [card.image]);
+
   return (
-    <div
-      className="border rounded-md p-3 flex flex-col gap-2 bg-muted"
-    >
-      <p className="text-xs text-muted-foreground">
-        Card {cardIndex + 1}
-      </p>
+    <div className="border rounded-md p-3 flex flex-col gap-2 bg-muted">
+      <p className="text-xs text-muted-foreground">Card {cardIndex + 1}</p>
+
       <div className="flex flex-row gap-2">
         <div className="flex flex-col gap-2 w-2/3">
           <Input
@@ -40,6 +43,7 @@ export default function Flashcard(
             placeholder="Word"
             className="border px-2 py-1 rounded text-sm"
           />
+
           <div className="flex flex-col gap-2">
             <div className="flex flex-row items-center gap-2">
               <Input
@@ -71,29 +75,27 @@ export default function Flashcard(
           </div>
         </div>
 
-
         <div className="flex flex-col items-center justify-center gap-2 w-1/3">
-          {card.image ? (
+          {card.image && previewUrl ? (
             <>
-              <p className="text-xs text-muted-foreground">{card.image.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {card.image.name}
+              </p>
               <Image
-                src={getImagePreview(card.image)}
+                src={previewUrl}
                 alt="Preview"
                 width={60}
                 height={60}
                 className="rounded-md"
-              /></>) : (
+              />
+            </>
+          ) : (
             <p className="text-xs text-muted-foreground">No image</p>
           )}
         </div>
       </div>
     </div>
-
-  )
-}
-
-function getImagePreview(file: File) {
-  return URL.createObjectURL(file);
+  );
 }
 
 async function getClipboardImage(): Promise<File | null> {
@@ -107,6 +109,7 @@ async function getClipboardImage(): Promise<File | null> {
       return new File([blob], "clipboard-image.png", {type});
     }
   } catch {
+    // ignore
   }
   return null;
 }
