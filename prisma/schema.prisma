@@ -23,7 +23,7 @@ model User {
   updatedAt     DateTime       @updatedAt
   sessions      Session[]
   accounts      Account[]
-  GeneratedPdf  GeneratedPdf[]
+  FlashcardSet  FlashcardSet[]
 
   @@map("user")
 }
@@ -76,14 +76,31 @@ model Verification {
   @@map("verification")
 }
 
-model GeneratedPdf {
-  id        String   @id @default(cuid())
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  path      String
-  createdAt DateTime @default(now())
-  expiresAt DateTime
+enum FlashcardType {
+  IMAGES
+  WORDS
+}
 
-  @@index([userId])
+model Flashcard {
+  id             String        @id @default(cuid())
+  path           String
+  createdAt      DateTime      @default(now())
+  expiresAt      DateTime
+  type           FlashcardType
+  FlashcardSet   FlashcardSet  @relation(fields: [flashcardSetId], references: [id])
+  flashcardSetId String
+
   @@index([expiresAt])
+}
+
+model FlashcardSet {
+  id         String      @id @default(cuid())
+  name       String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  flashcards Flashcard[]
+  userId     String?
+  user       User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("flashcard_set")
 }

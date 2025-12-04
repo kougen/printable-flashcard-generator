@@ -2,6 +2,7 @@ import path from "path";
 import crypto from "crypto";
 import {promises as fs} from "fs";
 import {prisma} from "@/lib/db";
+import {FlashcardType} from "@/prisma/generated/prisma/enums";
 
 const STORAGE_DIR = path.join(process.cwd(), "storage", "pdfs");
 
@@ -16,10 +17,11 @@ function buildFilename(base: string) {
 export async function storeGeneratedPdf(options: {
   bytes: Uint8Array;
   baseFilename: string;
-  userId?: string;
+  flashcardSetId: string;
+  type: FlashcardType;
   ttlHours?: number;
 }) {
-  const {bytes, baseFilename, userId, ttlHours = 24 * 7} = options;
+  const {bytes, baseFilename, ttlHours = 24 * 7} = options;
 
   await fs.mkdir(STORAGE_DIR, {recursive: true});
 
@@ -31,11 +33,12 @@ export async function storeGeneratedPdf(options: {
   const now = new Date();
   const expiresAt = new Date(now.getTime() + ttlHours * 60 * 60 * 1000);
 
-  const dbRecord = await prisma.generatedPdf.create({
+  const dbRecord = await prisma.flashcard.create({
     data: {
-      userId: userId ?? null,
       path: absolutePath,
       expiresAt: expiresAt,
+      type: options.type,
+      flashcardSetId: options.flashcardSetId,
     },
   });
 

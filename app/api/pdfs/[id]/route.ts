@@ -5,7 +5,7 @@ import {promises as fs} from "fs";
 export async function GET(_req: NextRequest, {params}: { params: Promise<{ id: string }> }) {
   const {id} = await params;
 
-  const pdf = await prisma.generatedPdf.findUnique({
+  const pdf = await prisma.flashcard.findUnique({
     where: {id},
   });
 
@@ -14,6 +14,12 @@ export async function GET(_req: NextRequest, {params}: { params: Promise<{ id: s
   }
 
   if (pdf.expiresAt < new Date()) {
+    await prisma.flashcard.delete({where: {id}});
+    try {
+      await fs.unlink(pdf.path);
+    } catch (e) {
+      console.error("Failed to delete expired PDF file:", e);
+    }
     return new NextResponse("Expired", {status: 410});
   }
 

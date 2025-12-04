@@ -1,54 +1,81 @@
 "use client";
 
-import {useState} from "react";
+import {useReducer, useState} from "react";
 import {GenerateResult, Page} from "./types";
 import FlashcardPage from "./FlashcardPage";
 import {Button, buttonVariants} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+
+type Action =
+  | { type: "updateWord"; pageIndex: number; cardIndex: number; word: string }
+  | { type: "updateImage"; pageIndex: number; cardIndex: number; image: File | null }
+  | { type: "addPage" }
+  | { type: "removePage"; pageIndex: number }
+  | { type: "reset" };
 
 const GRID_COLS = 3;
 const GRID_ROWS = 5;
 const CARDS_PER_PAGE = GRID_COLS * GRID_ROWS;
 
+const createEmptyPage = (): Page =>
+  Array.from({length: CARDS_PER_PAGE}, () => ({word: "", image: null}));
+
+const pagesReducer = (state: Page[], action: Action): Page[] => {
+  switch (action.type) {
+    case "updateWord":
+      return state.map((page, pIdx) =>
+        pIdx !== action.pageIndex
+          ? page
+          : page.map((card, cIdx) =>
+            cIdx !== action.cardIndex ? card : {...card, word: action.word},
+          ),
+      );
+
+    case "updateImage":
+      return state.map((page, pIdx) =>
+        pIdx !== action.pageIndex
+          ? page
+          : page.map((card, cIdx) =>
+            cIdx !== action.cardIndex ? card : {...card, image: action.image},
+          ),
+      );
+
+    case "addPage":
+      return [...state, createEmptyPage()];
+
+    case "removePage":
+      if (state.length === 1) return [createEmptyPage()];
+      return state.filter((_, idx) => idx !== action.pageIndex);
+
+    case "reset":
+      return [createEmptyPage()];
+
+    default:
+      return state;
+  }
+};
+
 export default function FlashcardForm() {
-  const [pages, setPages] = useState<Page[]>([createEmptyPage()]);
+  const [pages, dispatch] = useReducer(pagesReducer, [createEmptyPage()]);
   const [excludeImages, setExcludeImages] = useState(false);
   const [result, setResult] = useState<GenerateResult | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const updateCardWord = (pageIndex: number, cardIndex: number, word: string) => {
-    setPages((prev) => {
-      const copy = structuredClone(prev) as Page[];
-      copy[pageIndex][cardIndex].word = word;
-      return copy;
-    });
-  };
+  const updateCardWord = (pageIndex: number, cardIndex: number, word: string) =>
+    dispatch({type: "updateWord", pageIndex, cardIndex, word});
 
-  const updateCardImage = (pageIndex: number, cardIndex: number, file: File | null) => {
-    setPages((prev) => {
-      const copy = structuredClone(prev) as Page[];
-      copy[pageIndex][cardIndex].image = file;
-      return copy;
-    });
-  };
+  const updateCardImage = (pageIndex: number, cardIndex: number, image: File | null) =>
+    dispatch({type: "updateImage", pageIndex, cardIndex, image});
 
-  const addPage = () => {
-    setPages((prev) => [...prev, createEmptyPage()]);
-  };
-
-  const removePage = (pageIndex: number) => {
-    setPages((prev) => {
-      if (prev.length === 1) {
-        return [createEmptyPage()];
-      }
-      const copy = [...prev];
-      copy.splice(pageIndex, 1);
-      return copy;
-    });
-  };
+  const addPage = () => dispatch({type: "addPage"});
+  const removePage = (pageIndex: number) => dispatch({type: "removePage", pageIndex});
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = new FormData();
+    const name = (e.currentTarget.elements.namedItem("name") as HTMLInputElement).value;
+    form.append("name", name);
+
     for (const page of pages) {
       for (const card of page) {
         if (card.word.trim() !== "") {
@@ -81,17 +108,24 @@ export default function FlashcardForm() {
     setResult(json);
   };
 
-
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <h1 className="text-2xl font-bold">Generate Flashcard PDFs</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {pages.map((page, pageIndex) => <FlashcardPage gridCols={GRID_COLS} key={pageIndex} page={page}
-                                                       pageIndex={pageIndex}
-                                                       updateCardWord={updateCardWord}
-                                                       updateCardImage={updateCardImage}
-                                                       removePage={removePage}/>)}
+        <Input id="name" name="name" type="text" placeholder="Flashcard Set Name" required/>
+
+        {pages.map((page, pageIndex) => (
+          <FlashcardPage
+            gridCols={GRID_COLS}
+            key={pageIndex}
+            page={page}
+            pageIndex={pageIndex}
+            updateCardWord={updateCardWord}
+            updateCardImage={updateCardImage}
+            removePage={removePage}
+          />
+        ))}
 
         <Button type="button" variant="secondary" onClick={addPage}>
           Add new page
@@ -115,9 +149,7 @@ export default function FlashcardForm() {
         <div className="mt-6 space-y-2 border p-4 rounded">
           <h2 className="font-semibold">Result</h2>
 
-          {result.error && (
-            <p className="text-destructive">{result.error}</p>
-          )}
+          {result.error && <p className="text-destructive">{result.error}</p>}
 
           {result.pdf_words_url && (
             <p>
@@ -147,9 +179,5 @@ export default function FlashcardForm() {
         </div>
       )}
     </div>
-
-  )
+  );
 }
-
-const createEmptyPage = (): Page =>
-  Array.from({length: CARDS_PER_PAGE}, () => ({word: "", image: null}));
