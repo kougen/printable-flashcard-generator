@@ -46,7 +46,7 @@ export default async function ProfilePage() {
         return (
           <Item variant="outline" key={flashcardSet.id} role="listitem">
             {imageFlashcard ? (
-              <HoverCard>
+              <HoverCard openDelay={100}>
                 <HoverCardTrigger asChild>
                   <ItemMedia variant="image" className="rounded-none">
                     <Image
