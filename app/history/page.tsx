@@ -6,6 +6,7 @@ import {Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle} fro
 import {Flashcard} from "@/prisma/generated/prisma/client";
 import Link from "next/link";
 import {buttonVariants} from "@/components/ui/button";
+import {HoverCard, HoverCardContent, HoverCardTrigger} from "@/components/ui/hover-card";
 
 const getFlashcardLink = (flashcard: Flashcard) => {
   const title = flashcard.type === "IMAGES" ? "Images" : "Words";
@@ -31,29 +32,61 @@ export default async function ProfilePage() {
     }
   });
 
-  const getImageFlashcard = () => {
-    return flashcardSets.flatMap(set => set.flashcards).find(card => card.type === "IMAGES");
-  }
+  const getImageFlashcard = (flashcardSet: {
+    flashcards: Flashcard[];
+  }) => {
+    return flashcardSet.flashcards.find(card => card.type === "IMAGES");
+  };
 
   return <div className="flex w-full max-w-md flex-col gap-6 p-4">
     <ItemGroup className="gap-4">
-      {flashcardSets.map((flashcardSet) => (
-        <Item variant="outline" key={flashcardSet.id} role="listitem">
-          <ItemMedia variant="image">
-            <Image src={`/api/pdfs/${getImageFlashcard()?.id}/thumbnail`} width={32} height={32} alt="PDF icon"
-            />
-          </ItemMedia>
-          <ItemContent>
-            <ItemTitle className="line-clamp-1">
-              {flashcardSet.name} -{" "}
-              <span className="text-muted-foreground">{flashcardSet.createdAt.toISOString()}</span>
-            </ItemTitle>
-            <ItemDescription>
-              {flashcardSet.flashcards.map((flashcard) => getFlashcardLink(flashcard))}
-            </ItemDescription>
-          </ItemContent>
-        </Item>
-      ))}
+      {flashcardSets.map((flashcardSet) => {
+        const imageFlashcard = getImageFlashcard(flashcardSet);
+
+        return (
+          <Item variant="outline" key={flashcardSet.id} role="listitem">
+            {imageFlashcard ? (
+              <HoverCard>
+                <HoverCardTrigger asChild>
+                  <ItemMedia variant="image" className="rounded-none">
+                    <Image
+                      src={`/api/pdfs/${imageFlashcard.id}/thumbnail`}
+                      width={32}
+                      height={32}
+                      alt="PDF icon"
+                    />
+                  </ItemMedia>
+                </HoverCardTrigger>
+                <HoverCardContent>
+                  <Image
+                    src={`/api/pdfs/${imageFlashcard.id}/thumbnail`}
+                    width={256}
+                    height={256}
+                    alt="PDF preview"
+                  />
+                </HoverCardContent>
+              </HoverCard>
+            ) : (
+              <div className="w-8 h-8 border rounded-sm flex items-center justify-center text-xs">
+                N/A
+              </div>
+            )}
+            <ItemContent>
+              <ItemTitle className="line-clamp-1">
+                {flashcardSet.name} -{" "}
+                <span className="text-muted-foreground">
+                  {flashcardSet.createdAt.toISOString()}
+                </span>
+              </ItemTitle>
+              <ItemDescription>
+                {flashcardSet.flashcards.map((flashcard) =>
+                  getFlashcardLink(flashcard),
+                )}
+              </ItemDescription>
+            </ItemContent>
+          </Item>
+        );
+      })}
     </ItemGroup>
   </div>
 }
