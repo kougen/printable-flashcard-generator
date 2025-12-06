@@ -11,10 +11,25 @@ import {HoverCard, HoverCardContent, HoverCardTrigger} from "@/components/ui/hov
 const getFlashcardLink = (flashcard: Flashcard) => {
   const title = flashcard.type === "IMAGES" ? "Images" : "Words";
 
+  if (flashcard.type === "IMAGES") {
+    return (
+      <Link href={`/api/pdfs/${flashcard.id}`} className={buttonVariants({variant: "link"})}>
+        {title}
+      </Link>
+    )
+  }
+
   return (
-    <Link key={flashcard.id} href={`/api/pdfs/${flashcard.id}`} className={buttonVariants({variant: "link"})}>
-      {title}
-    </Link>
+    <HoverCard key={flashcard.id} openDelay={100}>
+      <HoverCardTrigger asChild>
+        <Link href={`/api/pdfs/${flashcard.id}`} className={buttonVariants({variant: "link"})}>
+          {title}
+        </Link>
+      </HoverCardTrigger>
+      <HoverCardContent>
+        <Image src={`/api/pdfs/${flashcard.id}/thumbnail`} width={256} height={256} alt="PDF preview"/>
+      </HoverCardContent>
+    </HoverCard>
   )
 }
 
