@@ -17,11 +17,8 @@ function buildFilename(base: string) {
 export async function storeGeneratedPdf(options: {
   bytes: Uint8Array;
   baseFilename: string;
-  flashcardSetId: string;
-  type: FlashcardType;
-  ttlHours?: number;
 }) {
-  const {bytes, baseFilename, ttlHours = 24 * 7} = options;
+  const {bytes, baseFilename,} = options;
 
   await fs.mkdir(STORAGE_DIR, {recursive: true});
 
@@ -30,19 +27,26 @@ export async function storeGeneratedPdf(options: {
 
   await fs.writeFile(absolutePath, bytes);
 
+  return absolutePath;
+}
+
+export async function storePdfInDatabase(options: {
+  flashcardSetId: string;
+  type: FlashcardType;
+  ttlHours?: number;
+  absolutePath: string;
+}) {
+  const {flashcardSetId, type, absolutePath, ttlHours = 24 * 7} = options;
+
   const now = new Date();
   const expiresAt = new Date(now.getTime() + ttlHours * 60 * 60 * 1000);
 
-  const dbRecord = await prisma.flashcard.create({
+  return await prisma.flashcard.create({
     data: {
       path: absolutePath,
-      expiresAt: expiresAt,
-      type: options.type,
-      flashcardSetId: options.flashcardSetId,
+      expiresAt,
+      type,
+      flashcardSetId,
     },
   });
-
-  const publicUrl = `/api/pdfs/${dbRecord.id}`;
-
-  return {record: dbRecord, url: publicUrl};
 }
