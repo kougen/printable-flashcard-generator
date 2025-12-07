@@ -13,7 +13,7 @@ const getFlashcardLink = (flashcard: Flashcard) => {
 
   if (flashcard.type === "IMAGES") {
     return (
-      <Link href={`/api/pdfs/${flashcard.id}`} className={buttonVariants({variant: "link"})}>
+      <Link key={flashcard.id} href={`/api/pdfs/${flashcard.id}`} className={buttonVariants({variant: "link"})}>
         {title}
       </Link>
     )
