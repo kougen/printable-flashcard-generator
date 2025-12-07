@@ -25,7 +25,9 @@ export const generateWordsPdf = async (words: string[]): Promise<GeneratedPdfRes
       currentPageIndex = pos.pageIndex;
     }
 
-    if (!currentPage) continue;
+    if (!currentPage) {
+      continue;
+    }
 
     const word = words[pos.globalIndex];
 

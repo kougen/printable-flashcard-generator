@@ -44,7 +44,9 @@ export const generateImagesPdf = async (images: File[]): Promise<GeneratedPdfRes
       currentPageIndex = pos.pageIndex;
     }
 
-    if (!currentPage) continue;
+    if (!currentPage) {
+      continue;
+    }
 
     const file = images[pos.globalIndex];
 
