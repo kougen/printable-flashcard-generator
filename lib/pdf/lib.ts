@@ -24,6 +24,12 @@ export type CellPosition = {
   y: number;
 };
 
+export type GeneratedPdfResponse = {
+  pdf: Uint8Array;
+  pageCount: number;
+  flashcardCount: number;
+}
+
 export const drawRectangle = (page: PDFPage, x: number, y: number) => {
   page.drawRectangle({
     x,

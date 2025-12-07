@@ -5,12 +5,12 @@ import {
   CARD_WIDTH,
   CARD_HEIGHT,
   drawRectangle,
-  gridPositions
+  gridPositions, GeneratedPdfResponse
 } from "./lib";
 
 const FONT_SIZE = 30;
 
-export const generateWordsPdf = async (words: string[]): Promise<Uint8Array> => {
+export const generateWordsPdf = async (words: string[]): Promise<GeneratedPdfResponse> => {
   const wordsPdf = await PDFDocument.create();
   const font = await wordsPdf.embedFont(StandardFonts.Helvetica);
 
@@ -51,7 +51,11 @@ export const generateWordsPdf = async (words: string[]): Promise<Uint8Array> => 
     }
   }
 
-  return await wordsPdf.save();
+  return {
+    pdf: await wordsPdf.save(),
+    pageCount: wordsPdf.getPageCount(),
+    flashcardCount: totalWords,
+  }
 };
 
 function wrapTextByChars(text: string, maxChars = 15): string[] {
