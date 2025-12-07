@@ -42,6 +42,9 @@ export default async function ProfilePage() {
   const user = session.user;
   const flashcardSets = await prisma.flashcardSet.findMany({
     where: {userId: user.id},
+    orderBy: {
+      updatedAt: "desc",
+    },
     include: {
       flashcards: true,
     }
@@ -57,6 +60,7 @@ export default async function ProfilePage() {
     <ItemGroup className="gap-4">
       {flashcardSets.map((flashcardSet) => {
         const imageFlashcard = getImageFlashcard(flashcardSet);
+        const imageLink = flashcardSet.flashcards.find(card => card.type === "IMAGES");
 
         return (
           <Item variant="outline" key={flashcardSet.id} role="listitem">
@@ -66,6 +70,7 @@ export default async function ProfilePage() {
                   <ItemMedia variant="image" className="rounded-none">
                     <Image
                       src={`/api/pdfs/${imageFlashcard.id}/thumbnail`}
+                      loading="eager"
                       width={32}
                       height={32}
                       alt="PDF icon"
@@ -74,6 +79,7 @@ export default async function ProfilePage() {
                 </HoverCardTrigger>
                 <HoverCardContent>
                   <Image
+                    loading="eager"
                     src={`/api/pdfs/${imageFlashcard.id}/thumbnail`}
                     width={256}
                     height={256}
@@ -94,9 +100,12 @@ export default async function ProfilePage() {
                 </span>
               </ItemTitle>
               <ItemDescription>
-                {flashcardSet.flashcards.map((flashcard) =>
-                  getFlashcardLink(flashcard),
-                )}
+                {imageLink && (getFlashcardLink(imageLink))}
+                {flashcardSet.flashcards
+                  .filter((flashcard) => flashcard.id !== imageLink?.id)
+                  .map((flashcard) =>
+                    getFlashcardLink(flashcard),
+                  )}
               </ItemDescription>
             </ItemContent>
           </Item>

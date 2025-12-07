@@ -59,7 +59,7 @@ const pagesReducer = (state: Page[], action: Action): Page[] => {
 };
 
 type FlashcardFormProps = {
-  flashcardSets: { id: string; name: string }[] | undefined;
+  flashcardSets?: { id: string; name: string, createdAt: Date }[];
 };
 
 export default function FlashcardForm({flashcardSets}: FlashcardFormProps) {
@@ -81,7 +81,9 @@ export default function FlashcardForm({flashcardSets}: FlashcardFormProps) {
     e.preventDefault();
     const form = new FormData();
     const name = (e.currentTarget.elements.namedItem("name") as HTMLInputElement).value;
+    const flashcardSetId = (e.currentTarget.elements.namedItem("flashcardSetId") as HTMLSelectElement).value;
     form.append("name", name);
+    form.append("flashcard_set_id", flashcardSetId);
 
     for (const page of pages) {
       for (const card of page) {
@@ -140,14 +142,14 @@ export default function FlashcardForm({flashcardSets}: FlashcardFormProps) {
           Add new page
         </Button>
 
-        <NativeSelect id="flashcardSet" name="flashcardSet" defaultValue="">
+        {flashcardSets && <NativeSelect id="flashcardSetId" name="flashcardSetId" defaultValue="">
           <NativeSelectOption value="">Select a flashcard set</NativeSelectOption>
           {flashcardSets?.map((set) => (
             <NativeSelectOption key={set.id} value={set.id}>
-              {set.name}
+              {set.name} - {set.createdAt.toLocaleDateString("ja-JP")}
             </NativeSelectOption>
           ))}
-        </NativeSelect>
+        </NativeSelect>}
         <Label
           className="text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 hover:bg-accent/50 flex items-start gap-3 rounded-lg border p-3 has-[[aria-checked=true]]:border-blue-600 has-[[aria-checked=true]]:bg-blue-50 dark:has-[[aria-checked=true]]:border-blue-900 dark:has-[[aria-checked=true]]:bg-blue-950">
           <Checkbox
