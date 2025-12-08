@@ -1,6 +1,6 @@
 "use client";
 
-import {useReducer, useState} from "react";
+import React, {useReducer, useState} from "react";
 import {GenerateResult, Page} from "./types";
 import FlashcardPage from "./FlashcardPage";
 import {Button, buttonVariants} from "@/components/ui/button";
@@ -63,10 +63,20 @@ type FlashcardFormProps = {
 };
 
 export default function FlashcardForm({flashcardSets}: FlashcardFormProps) {
+  const [name, setName] = useState("");
   const [pages, dispatch] = useReducer(pagesReducer, [createEmptyPage()]);
   const [excludeImages, setExcludeImages] = useState(false);
+  const [flashcardSetId, setFlashcardSetId] = useState<string | null>(null);
   const [result, setResult] = useState<GenerateResult | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const handleSelectSet = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const id = e.target.value;
+    console.log(id);
+    setFlashcardSetId(id);
+    const selected = flashcardSets?.find((set) => set.id === id);
+    setName(selected?.name ?? "");
+  };
 
   const updateCardWord = (pageIndex: number, cardIndex: number, word: string) =>
     dispatch({type: "updateWord", pageIndex, cardIndex, word});
@@ -80,10 +90,10 @@ export default function FlashcardForm({flashcardSets}: FlashcardFormProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = new FormData();
-    const name = (e.currentTarget.elements.namedItem("name") as HTMLInputElement).value;
-    const flashcardSetId = (e.currentTarget.elements.namedItem("flashcardSetId") as HTMLSelectElement).value;
     form.append("name", name);
-    form.append("flashcard_set_id", flashcardSetId);
+    if (flashcardSetId) {
+      form.append("flashcard_set_id", flashcardSetId);
+    }
 
     for (const page of pages) {
       for (const card of page) {
@@ -111,7 +121,8 @@ export default function FlashcardForm({flashcardSets}: FlashcardFormProps) {
     setLoading(false);
 
     if (!res.ok) {
-      setResult({error: "PDF generation failed."});
+      const error = await res.json();
+      setResult({error: error?.message || "An unknown error occurred"});
       return;
     }
 
@@ -124,7 +135,9 @@ export default function FlashcardForm({flashcardSets}: FlashcardFormProps) {
       <h1 className="text-2xl font-bold">Generate Flashcard PDFs</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Input id="name" name="name" type="text" placeholder="Flashcard Set Name" required/>
+        <Input id="name" name="name" type="text" placeholder="Flashcard Set Name" required value={name}
+               disabled={!!flashcardSetId}
+               onChange={(e) => setName(e.target.value)}/>
 
         {pages.map((page, pageIndex) => (
           <FlashcardPage
@@ -142,16 +155,17 @@ export default function FlashcardForm({flashcardSets}: FlashcardFormProps) {
           Add new page
         </Button>
 
-        {flashcardSets && <NativeSelect id="flashcardSetId" name="flashcardSetId" defaultValue="">
-          <NativeSelectOption value="">Select a flashcard set</NativeSelectOption>
-          {flashcardSets?.map((set) => (
-            <NativeSelectOption key={set.id} value={set.id}>
-              {set.name} - {set.createdAt.toLocaleDateString("ja-JP")}
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>}
+        {flashcardSets &&
+          <NativeSelect id="flashcardSetId" name="flashcardSetId" defaultValue="" onChange={handleSelectSet}>
+            <NativeSelectOption value="">Select a flashcard set</NativeSelectOption>
+            {flashcardSets?.map((set) => (
+              <NativeSelectOption key={set.id} value={set.id}>
+                {set.name} - {set.createdAt.toLocaleDateString("ja-JP")}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>}
         <Label
-          className="text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 hover:bg-accent/50 flex items-start gap-3 rounded-lg border p-3 has-[[aria-checked=true]]:border-blue-600 has-[[aria-checked=true]]:bg-blue-50 dark:has-[[aria-checked=true]]:border-blue-900 dark:has-[[aria-checked=true]]:bg-blue-950">
+          className="text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 hover:bg-accent/50 flex items-start gap-3 rounded-lg border p-3 has-aria-checked=true:border-blue-600 has-aria-checked=true:bg-blue-50 dark:has-aria-checked=true:border-blue-900 dark:has-aria-checked=true:bg-blue-950">
           <Checkbox
             onCheckedChange={(value) => setExcludeImages(!!value)}
             className="data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white dark:data-[state=checked]:border-blue-700 dark:data-[state=checked]:bg-blue-700"
