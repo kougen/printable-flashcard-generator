@@ -1,5 +1,13 @@
 import {PDFDocument, PDFImage, PDFPage} from "pdf-lib";
-import {CARD_HEIGHT, CARD_WIDTH, drawRectangle, gridPositions, PAGE_HEIGHT, PAGE_WIDTH} from "./lib";
+import {
+  CARD_HEIGHT,
+  CARD_WIDTH,
+  drawRectangle,
+  GeneratedPdfResponse,
+  gridPositions,
+  PAGE_HEIGHT,
+  PAGE_WIDTH
+} from "./lib";
 import sharp from "sharp";
 
 export const embedImage = async (pdf: PDFDocument, file: File): Promise<PDFImage> => {
@@ -23,7 +31,7 @@ export const embedImage = async (pdf: PDFDocument, file: File): Promise<PDFImage
   }
 }
 
-export const generateImagesPdf = async (images: File[]): Promise<Uint8Array> => {
+export const generateImagesPdf = async (images: File[]): Promise<GeneratedPdfResponse> => {
   const imagesPdf = await PDFDocument.create();
   const totalImages = images.length;
 
@@ -36,7 +44,9 @@ export const generateImagesPdf = async (images: File[]): Promise<Uint8Array> => 
       currentPageIndex = pos.pageIndex;
     }
 
-    if (!currentPage) continue;
+    if (!currentPage) {
+      continue;
+    }
 
     const file = images[pos.globalIndex];
 
@@ -62,5 +72,9 @@ export const generateImagesPdf = async (images: File[]): Promise<Uint8Array> => 
     });
   }
 
-  return await imagesPdf.save();
+  return {
+    pdf: await imagesPdf.save(),
+    pageCount: imagesPdf.getPageCount(),
+    flashcardCount: totalImages,
+  }
 };

@@ -94,13 +94,16 @@ model Flashcard {
 }
 
 model FlashcardSet {
-  id         String      @id @default(cuid())
-  name       String
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  flashcards Flashcard[]
-  userId     String?
-  user       User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String      @id @default(cuid())
+  name            String
+  description     String?
+  pages           Int
+  flashcardsCount Int         @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  flashcards      Flashcard[]
+  userId          String?
+  user            User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("flashcard_set")
 }
