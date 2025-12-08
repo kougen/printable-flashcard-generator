@@ -86,11 +86,6 @@ export async function POST(req: NextRequest) {
 
   try {
     const {pdf: wordsPdf, pageCount, flashcardCount} = await generateWordsPdf(words);
-    const wordsPath = await storeGeneratedPdf({
-      bytes: wordsPdf,
-      baseFilename: "words.pdf",
-    });
-
     const flashcardSet = await getFlashcardSet(
       {id: existingFlashcardSetId, userId},
       {
@@ -102,6 +97,17 @@ export async function POST(req: NextRequest) {
         }
       }
     );
+
+    if (flashcardSet.pages !== pageCount || flashcardSet.flashcardsCount !== flashcardCount) {
+      return NextResponse.json({
+        message: "Number of pages and flashcards does not match the generated PDF",
+      }, {status: 400});
+    }
+
+    const wordsPath = await storeGeneratedPdf({
+      bytes: wordsPdf,
+      baseFilename: "words.pdf",
+    });
 
     const wordsRecord = await storePdfInDatabase({
       flashcardSetId: flashcardSet.id,
