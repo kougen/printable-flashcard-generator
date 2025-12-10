@@ -28,6 +28,7 @@ import {signOut, useSession} from "@/lib/auth-client";
 import {Badge} from "@/components/ui/badge";
 import {Spinner} from "@/components/ui/spinner";
 import {useRouter} from "next/navigation";
+import ThemeChanger from "@/components/theme-changer";
 
 
 export function NavUser() {
@@ -95,6 +96,10 @@ export function NavUser() {
                 </div>
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuSeparator/>
+            <DropdownMenuItem asChild>
+              <ThemeChanger/>
+            </DropdownMenuItem>
             <DropdownMenuSeparator/>
             <DropdownMenuItem onClick={handleSignOut}>
               <LogOut/>
