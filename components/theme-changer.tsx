@@ -1,41 +1,39 @@
 "use client"
 
 import * as React from "react"
-import {Moon, Sun} from "lucide-react"
+import {Monitor, Moon, Sun} from "lucide-react"
 import {useTheme} from "next-themes"
-
-import {Button} from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import {cn} from "@/lib/utils";
 
 export default function ThemeChanger() {
-  const {setTheme} = useTheme()
+  const {theme, setTheme} = useTheme();
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon" className="absolute right-4 bottom-4">
-          <Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90"/>
-          <Moon
-            className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0"/>
-          <span className="sr-only">Toggle theme</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" side="top">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
-          Light
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
-          Dark
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
-          System
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
+    <div className="flex items-center justify-between w-full rounded-full bg-muted py-2 px-4">
+      <span className="text-sm text-foreground">Theme</span>
+      <div
+        className={cn(
+          "flex gap-1 items-center rounded-full",
+          "[&>button]:rounded-md [&>button]:border [&>button]:p-1 [&>button]:transition-all [&>button]:duration-200 [&>button]:ease-in-out",
+          "[&>button]:hover:bg-accent [&>button]:hover:shadow-lg",
+          "[&>button]:focus-visible:outline-none [&>button]:focus-visible:ring-2 [&>button]:focus-visible:ring-ring",
+          "[&_svg]:pointer-events-none [&_svg]:size-3.5 [&_svg]:shrink-0",
+          "[&>button]:data-active:bg-accent [&>button]:data-active:shadow-lg",
+        )}
+      >
+        <button type="button" data-active={theme === "system"} onClick={() => setTheme("system")}>
+          <Monitor/>
+          <span className="sr-only">System theme</span>
+        </button>
+        <button type="button" data-active={theme === "light"} onClick={() => setTheme("light")}>
+          <Sun/>
+          <span className="sr-only">Light theme</span>
+        </button>
+        <button type="button" data-active={theme === "dark"} onClick={() => setTheme("dark")}>
+          <Moon/>
+          <span className="sr-only">Dark theme</span>
+        </button>
+      </div>
+    </div>
+  );
 }
