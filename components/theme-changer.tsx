@@ -21,15 +21,15 @@ export default function ThemeChanger() {
           "[&>button]:data-active:bg-accent [&>button]:data-active:shadow-lg",
         )}
       >
-        <button data-active={theme === "system" ? "" : undefined} onClick={() => setTheme("system")}>
+        <button type="button" data-active={theme === "system"} onClick={() => setTheme("system")}>
           <Monitor/>
           <span className="sr-only">System theme</span>
         </button>
-        <button data-active={theme === "light" ? "" : undefined} onClick={() => setTheme("light")}>
+        <button type="button" data-active={theme === "light"} onClick={() => setTheme("light")}>
           <Sun/>
           <span className="sr-only">Light theme</span>
         </button>
-        <button data-active={theme === "dark" ? "" : undefined} onClick={() => setTheme("dark")}>
+        <button type="button" data-active={theme === "dark"} onClick={() => setTheme("dark")}>
           <Moon/>
           <span className="sr-only">Dark theme</span>
         </button>
