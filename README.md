@@ -15,6 +15,8 @@ flashcards with images. This is good if you want to create multi-language flashc
 
 If you already have the images printed out, you can check the "Exclude Images" box to skip the image PDF generation.
 
+![exclude-images](./assets/exclude-images.gif)
+
 ### Paste Copied Image
 
 You can paste an image from you clipboard by clicking the "Paste" button next to the image input. This is useful if you
