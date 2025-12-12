@@ -30,7 +30,6 @@ import {Spinner} from "@/components/ui/spinner";
 import {useRouter} from "next/navigation";
 import ThemeChanger from "@/components/theme-changer";
 
-
 export function NavUser() {
   const router = useRouter();
   const {data, isPending} = useSession();

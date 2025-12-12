@@ -10,6 +10,7 @@ type FlashcardPageProps = {
   updateCardWord: (pageIndex: number, cardIndex: number, word: string) => void;
   updateCardImage: (pageIndex: number, cardIndex: number, file: File | null) => void;
   removePage: (pageIndex: number) => void;
+  excludeImages?: boolean;
 }
 
 export default function FlashcardPage(
@@ -20,6 +21,7 @@ export default function FlashcardPage(
     updateCardWord,
     updateCardImage,
     removePage,
+    excludeImages
   }: FlashcardPageProps
 ) {
   return (
@@ -44,6 +46,7 @@ export default function FlashcardPage(
       >
         {page.map((card, cardIndex) => <Flashcard key={cardIndex} card={card} cardIndex={cardIndex}
                                                   pageIndex={pageIndex} updateCardWord={updateCardWord}
+                                                  excludeImages={excludeImages}
                                                   updateCardImage={updateCardImage}/>)}
       </div>
     </section>

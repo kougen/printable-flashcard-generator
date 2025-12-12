@@ -148,6 +148,7 @@ export default function FlashcardForm({flashcardSets}: FlashcardFormProps) {
             updateCardWord={updateCardWord}
             updateCardImage={updateCardImage}
             removePage={removePage}
+            excludeImages={excludeImages}
           />
         ))}
 
