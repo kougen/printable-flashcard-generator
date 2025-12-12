@@ -1,5 +1,9 @@
 # Printable Flashcard Generator
 
+You can create printable flashcards with borders. If you don't include images to the generation only a words PDF will
+get generated but if you choose to include both images and words, you need to make sure that the length of both lists
+are the same.
+
 ## Features
 
 ### Log in with Google
