@@ -16,6 +16,8 @@ If you already have the images printed out, you can check the "Exclude Images" b
 You can paste an image from you clipboard by clicking the "Paste" button next to the image input. This is useful if you
 want to quickly add an image without having to save it to your computer first.
 
+![copy-paste-image](./assets/copy-paste-image.gif)
+
 ## Development
 
 Before you start the dev server, first you need to start the db container:
