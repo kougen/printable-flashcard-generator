@@ -15,3 +15,22 @@ If you already have the images printed out, you can check the "Exclude Images" b
 
 You can paste an image from you clipboard by clicking the "Paste" button next to the image input. This is useful if you
 want to quickly add an image without having to save it to your computer first.
+
+## Development
+
+Before you start the dev server, first you need to start the db container:
+
+```sh
+# Start the compose
+docker compose up -d
+
+# Run the db migrations
+bunx prisma migrate
+
+# Generate the prisma client
+bunx prisma generate
+
+# Start the dev server
+bun dev
+
+```
