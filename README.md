@@ -1,8 +1,8 @@
 # Printable Flashcard Generator
 
-You can create printable flashcards with borders. If you don't include images to the generation only a words PDF will
-get generated but if you choose to include both images and words, you need to make sure that the length of both lists
-are the same.
+You can create printable flashcards with borders. If you don't include images to the generation, only a words PDF will
+get generated, but if you choose to include both images and words, you need to make sure that the length of both lists
+is the same.
 
 ## Features
 
@@ -10,6 +10,8 @@ are the same.
 
 If you want to save your flashcards, you can log in with Google. This also allows you to add more words to a set of
 flashcards with images. This is good if you want to create multi-language flashcards.
+
+![login-with-google](./assets/login-with-google.png)
 
 ### Exclude Images
 
