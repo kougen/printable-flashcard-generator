@@ -1,4 +1,5 @@
-import {PDFDocument, PDFPage, rgb, StandardFonts} from "pdf-lib";
+import {PDFDocument, PDFPage, rgb} from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
 import {
   PAGE_HEIGHT,
   PAGE_WIDTH,
@@ -8,11 +9,46 @@ import {
   gridPositions, GeneratedPdfResponse
 } from "./lib";
 
+import {readFile} from "fs/promises";
+import {join} from "path";
+
 const FONT_SIZE = 30;
+
+const kanaPattern = /[\u3040-\u30FF]/;
+const hanPattern = /[\u4E00-\u9FFF]/;
 
 export const generateWordsPdf = async (words: string[]): Promise<GeneratedPdfResponse> => {
   const wordsPdf = await PDFDocument.create();
-  const font = await wordsPdf.embedFont(StandardFonts.Helvetica);
+
+  wordsPdf.registerFontkit(fontkit);
+
+  const fontsFolder = join(process.cwd(), "assets", "fonts");
+
+  const fontLatin = await wordsPdf.embedFont(
+    await readFile(join(fontsFolder, "Roboto-Regular.ttf")),
+    {subset: true}
+  );
+
+  const fontJP = await wordsPdf.embedFont(
+    await readFile(join(fontsFolder, "NotoSansJP-Regular.ttf")),
+    {subset: true}
+  );
+
+  const fontZH = await wordsPdf.embedFont(
+    await readFile(join(fontsFolder, "NotoSansTC-Regular.ttf")),
+    {subset: true}
+  );
+
+  function pickFont(text: string) {
+    if (kanaPattern.test(text)) {
+      return fontJP;
+    }
+    if (hanPattern.test(text)) {
+      return fontZH;
+    }
+    return fontLatin;
+  }
+
 
   const totalWords = words.length;
 
@@ -38,6 +74,7 @@ export const generateWordsPdf = async (words: string[]): Promise<GeneratedPdfRes
     let textY = pos.y + (CARD_HEIGHT + totalTextHeight) / 2 - FONT_SIZE;
 
     for (const line of lines) {
+      const font = pickFont(line);
       const lineWidth = font.widthOfTextAtSize(line, FONT_SIZE);
       const textX = pos.x + (CARD_WIDTH - lineWidth) / 2;
 
