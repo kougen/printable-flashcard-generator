@@ -14,8 +14,8 @@ import {join} from "path";
 
 const FONT_SIZE = 30;
 
-const reKana = /[\u3040-\u30FF]/;
-const reHan = /[\u4E00-\u9FFF]/;
+const kanaPattern = /[\u3040-\u30FF]/;
+const hanPattern = /[\u4E00-\u9FFF]/;
 
 export const generateWordsPdf = async (words: string[]): Promise<GeneratedPdfResponse> => {
   const wordsPdf = await PDFDocument.create();
@@ -40,10 +40,10 @@ export const generateWordsPdf = async (words: string[]): Promise<GeneratedPdfRes
   );
 
   function pickFont(text: string) {
-    if (reKana.test(text)) {
+    if (kanaPattern.test(text)) {
       return fontJP;
     }
-    if (reHan.test(text)) {
+    if (hanPattern.test(text)) {
       return fontZH;
     }
     return fontLatin;
