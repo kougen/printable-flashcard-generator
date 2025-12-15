@@ -47,11 +47,11 @@ RUN addgroup --system nextjs \
   && mkdir -p /app/storage/pdfs \
   && chown -R nextjs:nextjs /app
 
-#COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/assets/fonts ./assets/fonts
 COPY /prisma.config.ts ./prisma.config.ts
 
 USER nextjs
