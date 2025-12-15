@@ -14,13 +14,41 @@ import {join} from "path";
 
 const FONT_SIZE = 30;
 
+const reKana = /[\u3040-\u30FF]/;
+const reHan = /[\u4E00-\u9FFF]/;
+
 export const generateWordsPdf = async (words: string[]): Promise<GeneratedPdfResponse> => {
   const wordsPdf = await PDFDocument.create();
 
   wordsPdf.registerFontkit(fontkit);
 
-  const fontBytes = await readFile(join(process.cwd(), "assets", "fonts", "Roboto-Regular.ttf"));
-  const font = await wordsPdf.embedFont(fontBytes);
+  const fontsFolder = join(process.cwd(), "assets", "fonts");
+
+  const fontLatin = await wordsPdf.embedFont(
+    await readFile(join(fontsFolder, "Roboto-Regular.ttf")),
+    {subset: true}
+  );
+
+  const fontJP = await wordsPdf.embedFont(
+    await readFile(join(fontsFolder, "NotoSansJP-Regular.ttf")),
+    {subset: true}
+  );
+
+  const fontZH = await wordsPdf.embedFont(
+    await readFile(join(fontsFolder, "NotoSansTC-Regular.ttf")),
+    {subset: true}
+  );
+
+  function pickFont(text: string) {
+    if (reKana.test(text)) {
+      return fontJP;
+    }
+    if (reHan.test(text)) {
+      return fontZH;
+    }
+    return fontLatin;
+  }
+
 
   const totalWords = words.length;
 
@@ -46,6 +74,7 @@ export const generateWordsPdf = async (words: string[]): Promise<GeneratedPdfRes
     let textY = pos.y + (CARD_HEIGHT + totalTextHeight) / 2 - FONT_SIZE;
 
     for (const line of lines) {
+      const font = pickFont(line);
       const lineWidth = font.widthOfTextAtSize(line, FONT_SIZE);
       const textX = pos.x + (CARD_WIDTH - lineWidth) / 2;
 
