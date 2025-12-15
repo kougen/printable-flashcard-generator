@@ -1,4 +1,5 @@
-import {PDFDocument, PDFPage, rgb, StandardFonts} from "pdf-lib";
+import {PDFDocument, PDFPage, rgb} from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
 import {
   PAGE_HEIGHT,
   PAGE_WIDTH,
@@ -8,11 +9,18 @@ import {
   gridPositions, GeneratedPdfResponse
 } from "./lib";
 
+import {readFile} from "fs/promises";
+import {join} from "path";
+
 const FONT_SIZE = 30;
 
 export const generateWordsPdf = async (words: string[]): Promise<GeneratedPdfResponse> => {
   const wordsPdf = await PDFDocument.create();
-  const font = await wordsPdf.embedFont(StandardFonts.Helvetica);
+
+  wordsPdf.registerFontkit(fontkit);
+
+  const fontBytes = await readFile(join(process.cwd(), "assets", "fonts", "Roboto-Regular.ttf"));
+  const font = await wordsPdf.embedFont(fontBytes);
 
   const totalWords = words.length;
 
